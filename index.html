@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加糖 — UI/UX 设计</title>
+    <meta name="description" content="加糖，UI/UX 设计师。系统化思考，用心设计，以工艺与品味赋能数字产品。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./assets/js/three.module.js",
+            "three/addons/": "./assets/js/addons/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- SVG 滤镜定义 -->
+    <svg class="filter-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;">
+        <defs>
+            <filter id="liquidDistortFilter" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.014 0.020" numOctaves="2" seed="7" result="noise"/>
+                <feDisplacementMap id="liquidDispMap" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- 页面加载遮罩 -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-line" style="--delay: 0.0s"></div>
+            <div class="loader-text">
+                <span>加糖</span><span>·</span><span>UI/UX</span>
+            </div>
+            <div class="loader-line" style="--delay: 0.0s"></div>
+        </div>
+    </div>
+
+    <!-- 蓝噪声背景光影层 -->
+    <div class="bg-noise" id="bgNoise">
+        <svg class="noise-svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <filter id="blueNoiseFilter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/>
+                <feColorMatrix type="matrix" values="
+                    0 0 0 0 0.35
+                    0 0 0 0 0.45
+                    0 0 0 0 0.65
+                    0 0 0 0.18 0"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#blueNoiseFilter)"/>
+        </svg>
+        <div class="noise-light" id="noiseLight"></div>
+    </div>
+
+    <!-- 烟雾粒子拖尾 canvas -->
+    <canvas class="smoke-canvas" id="smokeCanvas"></canvas>
+
+    <!-- 自定义光标 -->
+    <div class="cursor-pointer" id="cursorPointer"></div>
+
+    <!-- 固定导航栏 -->
+    <nav class="site-nav" id="siteNav">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo">加糖<span class="dot">·</span></a>
+            <ul class="nav-links">
+                <li><a href="#hero" class="nav-link">首页</a></li>
+                <li><a href="#character" class="nav-link">角色</a></li>
+                <li><a href="#manifesto" class="nav-link">理念</a></li>
+                <li><a href="#projects" class="nav-link">作品</a></li>
+                <li><a href="#cta" class="nav-link">联系</a></li>
+            </ul>
+            <a href="mailto:hello@jiatang.design" class="nav-cta">Get in touch ↗</a>
+        </div>
+    </nav>
+
+    <!-- 页面可扭曲内容容器 -->
+    <div class="liquid-distort" id="liquidDistort">
+
+    <!-- 滚动容器 -->
+    <div class="scroll-container" id="scrollContainer">
+
+        <!-- ===== Section 1: Hero ===== -->
+        <section class="panel panel-hero" data-panel="hero" id="hero">
+            <!-- 背景掉落素材层（装饰元素，不受1320px约束） -->
+            <div class="falling-layer" id="fallingLayer">
+                <div class="sticker s-1" data-depth="0.06"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_01.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-2" data-depth="0.08"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_02.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-3" data-depth="0.05"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_03.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-4" data-depth="0.10"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_04.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-5" data-depth="0.07"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_05.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-6" data-depth="0.09"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_06.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-7" data-depth="0.04"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_07.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-8" data-depth="0.11"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_08.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-9" data-depth="0.06"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_09.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-10" data-depth="0.08"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_10.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-11" data-depth="0.05"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_11.png" alt="" loading="lazy"></div></div>
+                <div class="sticker s-12" data-depth="0.09"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_12.png" alt="" loading="lazy"></div></div>
+            </div>
+
+            <!-- 前景 3D 文字悬浮素材 -->
+            <div class="hero-3d" id="hero3d">
+                <div class="scene-3d" id="scene3d">
+                    <span class="text-3d t-design" data-depth="0.20">
+                        <span class="text-3d-float">
+                            <span class="text-face">DESIGN</span>
+                        </span>
+                    </span>
+                    <span class="text-3d t-uiux" data-depth="0.16">
+                        <span class="text-3d-float">
+                            <span class="text-face">UI/UX</span>
+                        </span>
+                    </span>
+                    <span class="text-3d t-art" data-depth="0.24">
+                        <span class="text-3d-float">
+                            <span class="text-face">ART</span>
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 主内容（居中安全区） -->
+            <div class="hero-content">
+                <div class="hero-identity" data-reveal="slide-up">
+                    <p class="hero-tagline mono">UI/UX 设计 · Systems Thinking</p>
+                    <h1 class="hero-title">
+                        <span class="hero-line">系统化思考</span>
+                        <span class="hero-line">用心设计</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- 滚动提示 -->
+            <div class="scroll-hint">
+                <span>向下滚动</span>
+                <div class="scroll-line"></div>
+            </div>
+        </section>
+
+        <!-- ===== Section 2: Character 3D ===== -->
+        <section class="panel panel-character" data-panel="character" id="character">
+            <!-- 背景掉落素材层（装饰元素） -->
+            <div class="falling-layer char-falling">
+                <div class="sticker c-s-1" data-depth="0.05"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_02.png" alt="" loading="lazy"></div></div>
+                <div class="sticker c-s-2" data-depth="0.08"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_05.png" alt="" loading="lazy"></div></div>
+                <div class="sticker c-s-3" data-depth="0.06"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_07.png" alt="" loading="lazy"></div></div>
+                <div class="sticker c-s-4" data-depth="0.09"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_09.png" alt="" loading="lazy"></div></div>
+                <div class="sticker c-s-5" data-depth="0.05"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_11.png" alt="" loading="lazy"></div></div>
+                <div class="sticker c-s-6" data-depth="0.07"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_03.png" alt="" loading="lazy"></div></div>
+                <div class="sticker c-s-7" data-depth="0.10"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_06.png" alt="" loading="lazy"></div></div>
+                <div class="sticker c-s-8" data-depth="0.06"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_12.png" alt="" loading="lazy"></div></div>
+            </div>
+
+            <!-- 3D 角色舞台 -->
+            <div class="char-stage" id="charStage">
+                <!-- Three.js 3D 模型容器 -->
+                <div class="char-3d" id="char3D">
+                    <div class="char-3d-canvas" id="char3DCanvas"></div>
+                    <div class="char-3d-loader" id="char3DLoader">载入 3D…</div>
+                </div>
+
+                <!-- 人物介绍玻璃卡片（初始隐藏，鼠标进入模型时从底部滑出） -->
+                <div class="char-card" id="charCard">
+                    <div class="char-card-inner">
+                        <p class="char-card-name">我是 <strong>加糖</strong></p>
+                        <p class="char-card-role">UI/UX 设计师</p>
+                        <p class="char-card-desc">专注于数字产品的体验设计与系统化构建。以工艺与品味赋能每一个数字产品，探索 AI 时代下的设计工作流与体验创新。</p>
+                        <div class="char-card-tags">
+                            <span class="char-tag">Systems Thinking</span>
+                            <span class="char-tag">Design Engineering</span>
+                            <span class="char-tag">AI Workflow</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section 3: Manifesto ===== -->
+        <section class="panel panel-manifesto" data-panel="manifesto" id="manifesto">
+            <div class="manifesto-bg"></div>
+            <div class="manifesto-inner">
+                <h2 class="manifesto-title" data-reveal="word-by-word">
+                    <span class="word">以</span>
+                    <span class="word accent">工艺</span>
+                    <span class="word">与</span>
+                    <span class="word accent">品味</span>
+                    <span class="word">，</span>
+                    <span class="word">赋能数字产品</span>
+                </h2>
+                <p class="manifesto-sub" data-reveal="fade-up">探索如何以工艺与品味，重塑 AI 时代的设计工作流，构建下一代数字产品。</p>
+            </div>
+        </section>
+
+        <!-- ===== Section 4: Projects ===== -->
+        <section class="panel panel-projects" data-panel="projects" id="projects">
+            <div class="projects-inner">
+                <h3 class="section-label mono" data-reveal="fade-up">精选作品 / Selected Work</h3>
+                <ul class="project-list">
+                    <li class="project-item" data-reveal="slide-up-stagger">
+                        <a href="#" target="_blank" rel="noopener" class="project-link">
+                            <div class="project-thumb">
+                                <img src="assets/images/projects/fmimg/ds01.png" alt="项目1" onerror="this.parentElement.classList.add('thumb-placeholder')">
+                                <span class="thumb-fallback">01</span>
+                            </div>
+                            <div class="project-info">
+                                <span class="project-index mono">01</span>
+                                <span class="project-name">项目名称占位</span>
+                                <span class="project-type">设计项目</span>
+                            </div>
+                            <div class="project-meta">
+                                <span class="project-year mono">2025</span>
+                                <span class="project-arrow">↗</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="project-item" data-reveal="slide-up-stagger">
+                        <a href="#" target="_blank" rel="noopener" class="project-link">
+                            <div class="project-thumb">
+                                <img src="assets/images/projects/fmimg/inspire_mono_01.png" alt="项目2" onerror="this.parentElement.classList.add('thumb-placeholder')">
+                                <span class="thumb-fallback">02</span>
+                            </div>
+                            <div class="project-info">
+                                <span class="project-index mono">02</span>
+                                <span class="project-name">项目名称占位</span>
+                                <span class="project-type">Coding 项目</span>
+                            </div>
+                            <div class="project-meta">
+                                <span class="project-year mono">2025</span>
+                                <span class="project-arrow">↗</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="project-item" data-reveal="slide-up-stagger">
+                        <a href="#" target="_blank" rel="noopener" class="project-link">
+                            <div class="project-thumb">
+                                <img src="assets/images/projects/fmimg/wasm01.png" alt="项目3" onerror="this.parentElement.classList.add('thumb-placeholder')">
+                                <span class="thumb-fallback">03</span>
+                            </div>
+                            <div class="project-info">
+                                <span class="project-index mono">03</span>
+                                <span class="project-name">项目名称占位</span>
+                                <span class="project-type">设计工具</span>
+                            </div>
+                            <div class="project-meta">
+                                <span class="project-year mono">2024</span>
+                                <span class="project-arrow">↗</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="project-item" data-reveal="slide-up-stagger">
+                        <a href="#" target="_blank" rel="noopener" class="project-link">
+                            <div class="project-thumb">
+                                <img src="assets/images/projects/fmimg/wasm02.png" alt="项目4" onerror="this.parentElement.classList.add('thumb-placeholder')">
+                                <span class="thumb-fallback">04</span>
+                            </div>
+                            <div class="project-info">
+                                <span class="project-index mono">04</span>
+                                <span class="project-name">项目名称占位</span>
+                                <span class="project-type">设计项目</span>
+                            </div>
+                            <div class="project-meta">
+                                <span class="project-year mono">2024</span>
+                                <span class="project-arrow">↗</span>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ===== Section 5: CTA（粒子物理交互） ===== -->
+        <section class="panel panel-cta" data-panel="cta" id="cta">
+            <!-- 2D 粒子物理交互 canvas -->
+            <canvas class="particle-canvas" id="particleCanvas"></canvas>
+            <div class="cta-inner">
+                <p class="cta-small mono" data-reveal="fade-up">有目的的创新</p>
+                <h2 class="cta-title" data-reveal="word-by-word">
+                    <span class="word">一起</span>
+                    <span class="word">创造</span>
+                    <span class="word accent">不凡之作</span>
+                </h2>
+                <a href="mailto:hello@jiatang.design" class="cta-email" data-reveal="fade-up">hello@jiatang.design</a>
+            </div>
+        </section>
+
+    </div>
+    <!-- /.scroll-container -->
+
+    <!-- 底部信息栏 -->
+    <footer class="bottombar" id="bottombar">
+        <div class="bottombar-inner">
+            <div class="bottombar-left">
+                <span class="mono" id="clock">--:--</span>
+                <span class="bottombar-sep">·</span>
+                <span class="mono">GMT+8 中国</span>
+            </div>
+            <div class="bottombar-center">
+                <span class="mono" id="weather">--°C</span>
+            </div>
+            <div class="bottombar-right">
+                <span class="mono" id="coords">---- X ---- Y</span>
+            </div>
+        </div>
+    </footer>
+
+    </div>
+    <!-- /.liquid-distort -->
+
+    <script src="js/main.js"></script>
+    <script type="module" src="js/character3d.js"></script>
+</body>
+</html>
