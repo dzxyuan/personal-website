@@ -652,13 +652,17 @@
         });
     }
 
-    /* ---------- 9. 底部栏滚动隐藏 ---------- */
+    /* ---------- 9. 底部栏滚动隐藏（移动端不隐藏，保持可见） ---------- */
     function initBottombarScroll() {
         const bar = document.getElementById('bottombar');
         const nav = document.getElementById('siteNav');
         const mobileNav = document.getElementById('mobileNav');
         const container = document.getElementById('scrollContainer');
         if (!bar || !container) return;
+        // 移动端固定元素始终可见，不做滚动隐藏
+        // 仅在PC端启用滚动隐藏
+        const isMobile = () => window.innerWidth <= 768;
+        if (isMobile()) return;
         let last = 0;
         container.addEventListener('scroll', () => {
             const cur = container.scrollTop;
