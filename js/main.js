@@ -656,6 +656,7 @@
     function initBottombarScroll() {
         const bar = document.getElementById('bottombar');
         const nav = document.getElementById('siteNav');
+        const mobileNav = document.getElementById('mobileNav');
         const container = document.getElementById('scrollContainer');
         if (!bar || !container) return;
         let last = 0;
@@ -664,6 +665,7 @@
             const hidden = cur > 100 && cur > last;
             bar.classList.toggle('is-hidden', hidden);
             if (nav) nav.classList.toggle('is-hidden', hidden);
+            if (mobileNav) mobileNav.classList.toggle('is-hidden', hidden);
             last = cur;
         }, { passive: true });
     }
@@ -698,6 +700,10 @@
                 activeIdx = idx;
 
                 document.querySelectorAll('.nav-link').forEach((link, i) => {
+                    link.classList.toggle('is-active', i === activeIdx);
+                });
+
+                document.querySelectorAll('.mobile-nav-link').forEach((link, i) => {
                     link.classList.toggle('is-active', i === activeIdx);
                 });
 
@@ -896,6 +902,9 @@
                 panels[idx].classList.add('is-active');
                 activeIdx = idx;
                 document.querySelectorAll('.nav-link').forEach((link, i) => {
+                    link.classList.toggle('is-active', i === activeIdx);
+                });
+                document.querySelectorAll('.mobile-nav-link').forEach((link, i) => {
                     link.classList.toggle('is-active', i === activeIdx);
                 });
             }

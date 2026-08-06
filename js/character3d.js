@@ -99,28 +99,29 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
                 const model = gltf.scene;
                 modelRoot = model;
 
-                // 上半身胸像构图：显示完整上半身，填满容器不留边距
+                // 全身胸像构图：显示完整上半身（头部+肩+胸），不留底部间距
                 const box = new THREE.Box3().setFromObject(model);
                 const size = box.getSize(new THREE.Vector3());
                 const center = box.getCenter(new THREE.Vector3());
 
-                // 取顶部 78%（头+肩+胸+上腹），确保不裁切上半身
-                const upperFraction = 0.78;
-                const visibleHeight = size.y * upperFraction;
+                // 显示顶部 92%（完整头部+肩膀），只裁掉最底部
+                const visibleFraction = 0.92;
+                const visibleHeight = size.y * visibleFraction;
                 const visibleCenterY = box.max.y - visibleHeight / 2;
 
                 // 放大：让上半身充分填满视野
-                const targetHeight = 4.2;
+                const targetHeight = 4.0;
                 const scale = targetHeight / visibleHeight;
                 model.scale.setScalar(scale);
-                // 水平/z 用整体中心；垂直对齐上半身中心
+
+                // 水平/z 用整体中心；垂直对齐：让可见部分底部贴近容器底部
                 model.position.x = -center.x * scale;
                 model.position.y = -visibleCenterY * scale;
                 model.position.z = -center.z * scale;
 
-                // 摄像机距离：框住上半身高度，略紧凑填满
+                // 摄像机距离：框住上半身高度
                 const fovRad = camera.fov * Math.PI / 180;
-                const dist = (targetHeight / 2) / Math.tan(fovRad / 2) * 0.95;
+                const dist = (targetHeight / 2) / Math.tan(fovRad / 2) * 1.0;
                 camera.position.set(0, 0, dist);
                 camera.lookAt(0, 0, 0);
 
