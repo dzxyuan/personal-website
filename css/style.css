@@ -203,6 +203,10 @@ body::before {
 .scroll-container::-webkit-scrollbar { display: none; }
 
 html, body { height: 100%; overflow: hidden; }
+html:has(body.detail-page),
+html:has(body.admin-page),
+body.detail-page,
+body.admin-page { height: auto; overflow: auto; }
 
 .panel {
     min-height: 100vh;
@@ -711,8 +715,7 @@ html, body { height: 100%; overflow: hidden; }
         rgba(210, 224, 240, 0.2) 0%,
         rgba(200, 216, 236, 0.3) 50%,
         rgba(190, 208, 232, 0.2) 100%);
-    min-height: auto;
-    height: auto;
+    min-height: 100vh;
 }
 .projects-inner {
     max-width: var(--container-max); margin: 0 auto; width: 100%;
@@ -1004,8 +1007,10 @@ html, body { height: 100%; overflow: hidden; }
    ============================================ */
 @media (max-width: 768px) {
     :root { --pad: 16px; --container-max: 100%; }
-    body { cursor: auto; overflow: hidden; height: 100svh; }
+    body:not(.detail-page):not(.admin-page) { cursor: auto; overflow: hidden; height: 100svh; }
     html { overflow: hidden; width: 100%; height: 100svh; }
+    html:has(body.detail-page),
+    html:has(body.admin-page) { overflow: auto; height: auto; }
     .scroll-container {
         overflow-y: auto;
         overflow-x: hidden;
@@ -1331,8 +1336,11 @@ html, body { height: 100%; overflow: hidden; }
 body.detail-page {
     cursor: auto;
     background: var(--bg-2);
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 100vh;
 }
-body.detail-page,
 body.detail-page html,
 body.detail-page html body {
     height: auto !important;
@@ -1451,8 +1459,11 @@ body.admin-page {
     cursor: auto;
     background: var(--bg-1);
     color: var(--text-primary);
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 100vh;
 }
-body.admin-page,
 body.admin-page html,
 body.admin-page html body {
     height: auto !important;
