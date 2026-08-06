@@ -1,9 +1,6 @@
 // Cloudflare Pages Function - Projects API
-// GET  /projects -> 返回项目列表（KV > Cache > 默认数据）
-// POST /projects -> 保存项目列表到 KV + Cache
-
-const CACHE_KEY = 'https://internal/projects-data-v1';
-const CACHE_TTL = 31536000; // 1 year
+// GET  /projects -> 返回项目列表（KV > 默认数据）
+// POST /projects -> 保存项目列表到 KV
 
 const DEFAULT_PROJECTS = {
   "projects": [
@@ -62,57 +59,8 @@ const DEFAULT_PROJECTS = {
   ]
 };
 
-async function readData(env) {
-  // 1. Try KV (most persistent)
-  try {
-    if (env.PROJECTS_KV) {
-      const raw = await env.PROJECTS_KV.get('projects_data');
-      if (raw) return JSON.parse(raw);
-    }
-  } catch (e) {}
-
-  // 2. Try Cache API (good fallback)
-  try {
-    const cache = caches.default;
-    const req = new Request(CACHE_KEY);
-    const resp = await cache.match(req);
-    if (resp) {
-      const text = await resp.text();
-      if (text) return JSON.parse(text);
-    }
-  } catch (e) {}
-
-  // 3. Fallback to default
-  return DEFAULT_PROJECTS;
-}
-
-async function writeData(env, data) {
-  const json = JSON.stringify(data);
-
-  // 1. Write to KV if available
-  try {
-    if (env.PROJECTS_KV) {
-      await env.PROJECTS_KV.put('projects_data', json);
-    }
-  } catch (e) {}
-
-  // 2. Write to Cache API
-  try {
-    const cache = caches.default;
-    const req = new Request(CACHE_KEY);
-    const resp = new Response(json, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'max-age=31536000',
-      },
-    });
-    await cache.put(req, resp);
-  } catch (e) {}
-}
-
 export async function onRequest(context) {
   const { request, env } = context;
-  const url = new URL(request.url);
   const method = request.method;
 
   const corsHeaders = {
@@ -128,8 +76,15 @@ export async function onRequest(context) {
 
   if (method === 'GET') {
     try {
-      const data = await readData(env);
-      return new Response(JSON.stringify(data), { headers: corsHeaders });
+      // 优先从 KV 读取持久化数据
+      if (env.PROJECTS_KV) {
+        const raw = await env.PROJECTS_KV.get('projects_data');
+        if (raw) {
+          return new Response(raw, { headers: corsHeaders });
+        }
+      }
+      // KV 不可用或无数据，返回默认数据
+      return new Response(JSON.stringify(DEFAULT_PROJECTS), { headers: corsHeaders });
     } catch (e) {
       return new Response(JSON.stringify(DEFAULT_PROJECTS), { headers: corsHeaders });
     }
@@ -139,8 +94,13 @@ export async function onRequest(context) {
     try {
       const body = await request.text();
       const data = JSON.parse(body);
-      await writeData(env, data);
-      return new Response(JSON.stringify({ success: true, count: (data.projects || []).length }), {
+
+      // 写入 KV（如果可用）
+      if (env.PROJECTS_KV) {
+        await env.PROJECTS_KV.put('projects_data', JSON.stringify(data));
+      }
+
+      return new Response(JSON.stringify({ success: true, count: (data.projects || []).length, kv: !!env.PROJECTS_KV }), {
         headers: corsHeaders,
       });
     } catch (e) {
