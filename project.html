@@ -23,6 +23,7 @@
     <script>
         (function () {
             var STORAGE_KEY = 'jiatang_projects_v1';
+            var API_URL = '/projects';
             var wrap = document.getElementById('detailWrap');
 
             function getParam(name) {
@@ -31,19 +32,29 @@
             }
 
             function loadProjects(cb) {
-                // 优先读 localStorage
-                try {
-                    var cached = localStorage.getItem(STORAGE_KEY);
-                    if (cached) {
-                        var data = JSON.parse(cached);
-                        if (data && Array.isArray(data)) { cb(data); return; }
-                    }
-                } catch (e) {}
-                // 回退到 projects.json
-                fetch('projects.json', { cache: 'no-store' })
+                // 优先从服务器 API 读取（全站同步）
+                fetch(API_URL, { cache: 'no-store' })
                     .then(function (r) { return r.json(); })
-                    .then(function (data) { cb(data.projects || []); })
-                    .catch(function () { renderEmpty(); });
+                    .then(function (data) {
+                        var projects = data.projects || data;
+                        if (Array.isArray(projects) && projects.length) { cb(projects); return; }
+                        throw new Error('empty');
+                    })
+                    .catch(function () {
+                        // 回退：localStorage
+                        try {
+                            var cached = localStorage.getItem(STORAGE_KEY);
+                            if (cached) {
+                                var data = JSON.parse(cached);
+                                if (data && Array.isArray(data)) { cb(data); return; }
+                            }
+                        } catch (e) {}
+                        // 最后回退：projects.json
+                        fetch('projects.json', { cache: 'no-store' })
+                            .then(function (r) { return r.json(); })
+                            .then(function (data) { cb(data.projects || []); })
+                            .catch(function () { renderEmpty(); });
+                    });
             }
 
             function escapeHtml(s) {

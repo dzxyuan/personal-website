@@ -251,9 +251,10 @@
     <!-- /.liquid-distort -->
 
     <script>
-    /* 作品列表动态渲染：localStorage 优先，回退 projects.json */
+    /* 作品列表动态渲染：服务器 API 优先，回退 localStorage/projects.json */
     (function () {
         var STORAGE_KEY = 'jiatang_projects_v1';
+        var API_URL = '/projects';
         var listEl = document.getElementById('projectList');
 
         function escapeHtml(s) {
@@ -307,18 +308,33 @@
             }
         }
 
-        // 同步优先：localStorage 命中则在 main.js 初始化前完成渲染，可被滚动揭示接管
-        var cached = null;
-        try { cached = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
-        if (Array.isArray(cached)) {
-            render(cached, false);
-        } else {
-            // 首次访问：回退到 projects.json
-            fetch('projects.json', { cache: 'no-store' })
-                .then(function (r) { return r.json(); })
-                .then(function (data) { render(data.projects || [], true); })
-                .catch(function () { render([], true); });
-        }
+        // 优先从服务器 API 读取（全站同步），回退到 localStorage / projects.json
+        fetch(API_URL, { cache: 'no-store' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var projects = data.projects || data;
+                if (Array.isArray(projects) && projects.length) {
+                    // 同步写入 localStorage，同浏览器更流畅
+                    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(projects)); } catch (e) {}
+                    render(projects, true);
+                } else {
+                    throw new Error('empty');
+                }
+            })
+            .catch(function () {
+                // 回退：localStorage
+                var cached = null;
+                try { cached = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
+                if (Array.isArray(cached) && cached.length) {
+                    render(cached, false);
+                } else {
+                    // 最后回退：projects.json
+                    fetch('projects.json', { cache: 'no-store' })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) { render(data.projects || [], true); })
+                        .catch(function () { render([], true); });
+                }
+            });
 
         // 后台保存后，同浏览器多标签页同步更新
         window.addEventListener('storage', function (e) {

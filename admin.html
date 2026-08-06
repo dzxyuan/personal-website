@@ -92,6 +92,7 @@
     <script>
         (function () {
             var STORAGE_KEY = 'jiatang_projects_v1';
+            var API_URL = '/projects';
             var DEFAULT_URL = 'projects.json';
 
             var listEl = document.getElementById('adminList');
@@ -138,6 +139,12 @@
 
             function save() {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+                // 同步到服务器，全站访客即时可见
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ projects: projects })
+                }).catch(function () {});
             }
 
             function escapeHtml(s) {
