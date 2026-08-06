@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目详情 — 加糖</title>
+    <meta name="description" content="加糖，UI/UX 设计师。项目详情页。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="detail-page">
+    <nav class="detail-nav">
+        <a href="index.html" class="nav-logo">加糖<span style="color:var(--accent)">·</span></a>
+        <a href="index.html#projects">← 返回作品</a>
+    </nav>
+
+    <main class="detail-wrap" id="detailWrap">
+        <!-- 由 JS 动态渲染 -->
+    </main>
+
+    <script>
+        (function () {
+            var STORAGE_KEY = 'jiatang_projects_v1';
+            var wrap = document.getElementById('detailWrap');
+
+            function getParam(name) {
+                var m = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+                return m ? decodeURIComponent(m[1]) : '';
+            }
+
+            function loadProjects(cb) {
+                // 优先读 localStorage
+                try {
+                    var cached = localStorage.getItem(STORAGE_KEY);
+                    if (cached) {
+                        var data = JSON.parse(cached);
+                        if (data && Array.isArray(data)) { cb(data); return; }
+                    }
+                } catch (e) {}
+                // 回退到 projects.json
+                fetch('projects.json', { cache: 'no-store' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) { cb(data.projects || []); })
+                    .catch(function () { renderEmpty(); });
+            }
+
+            function escapeHtml(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            function renderEmpty() {
+                wrap.innerHTML = '<div class="detail-empty"><h2>未找到该项目</h2><p>该项目可能已被删除或暂时不可见。</p></div>';
+            }
+
+            function renderProject(project, all) {
+                var descHtml = escapeHtml(project.description || '').split(/\n{2,}/).map(function (p) {
+                    return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+                }).join('');
+
+                var imgs = Array.isArray(project.images) ? project.images : [];
+                var gallery = imgs.map(function (src) {
+                    return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(project.title || project.name || '') + '" loading="lazy" onerror="this.style.display=\'none\'">';
+                }).join('');
+
+                // 下一个可见项目
+                var visible = all.filter(function (p) { return p.visible !== false; });
+                var idx = visible.findIndex(function (p) { return p.id === project.id; });
+                var next = idx > -1 && idx < visible.length - 1 ? visible[idx + 1] : null;
+
+                var metaParts = [];
+                if (project.date) metaParts.push('<span>' + escapeHtml(project.date) + '</span>');
+                if (project.type) metaParts.push('<span class="meta-dot">·</span><span>' + escapeHtml(project.type) + '</span>');
+                if (project.year) metaParts.push('<span class="meta-dot">·</span><span>' + escapeHtml(project.year) + '</span>');
+
+                document.title = (project.title || project.name || '项目详情') + ' — 加糖';
+
+                wrap.innerHTML =
+                    '<header class="detail-header">' +
+                        '<div class="detail-meta">' + metaParts.join('') + '</div>' +
+                        '<h1 class="detail-title">' + escapeHtml(project.title || project.name || '未命名项目') + '</h1>' +
+                        (project.subtitle ? '<p class="detail-subtitle">' + escapeHtml(project.subtitle) + '</p>' : '') +
+                    '</header>' +
+                    (descHtml ? '<div class="detail-description">' + descHtml + '</div>' : '') +
+                    (gallery ? '<div class="detail-gallery">' + gallery + '</div>' : '') +
+                    '<footer class="detail-footer">' +
+                        '<a href="index.html#projects">← 返回作品</a>' +
+                        (next ? '<a href="project.html?id=' + encodeURIComponent(next.id) + '">下一个项目 →</a>' : '') +
+                    '</footer>';
+            }
+
+            var id = getParam('id');
+            if (!id) { renderEmpty(); return; }
+
+            loadProjects(function (projects) {
+                var project = projects.find(function (p) { return p.id === id; });
+                if (!project) { renderEmpty(); return; }
+                renderProject(project, projects);
+            });
+        })();
+    </script>
+</body>
+</html>

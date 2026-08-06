@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品管理 — 加糖</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="admin-page">
+    <div class="admin-wrap">
+        <header class="admin-header">
+            <h1>作品管理</h1>
+            <div class="admin-actions">
+                <a href="index.html" class="admin-btn">查看主页 ↗</a>
+                <button type="button" class="admin-btn" id="resetBtn">恢复默认</button>
+                <button type="button" class="admin-btn primary" id="newBtn">+ 新增项目</button>
+            </div>
+        </header>
+
+        <section class="admin-section">
+            <div class="admin-section-title">项目列表</div>
+            <ul class="admin-list" id="adminList"></ul>
+        </section>
+
+        <section class="admin-section" id="formSection" style="display:none;">
+            <div class="admin-section-title" id="formTitle">新增项目</div>
+            <form class="admin-form" id="projectForm" autocomplete="off">
+                <input type="hidden" id="f_id">
+                <div class="admin-field-row">
+                    <div class="admin-field">
+                        <label for="f_name">列表名称</label>
+                        <input type="text" id="f_name" placeholder="显示在主页列表中的简短名称" required>
+                    </div>
+                    <div class="admin-field">
+                        <label for="f_type">项目类型</label>
+                        <input type="text" id="f_type" placeholder="如：设计项目 / Coding 项目">
+                    </div>
+                </div>
+                <div class="admin-field-row">
+                    <div class="admin-field">
+                        <label for="f_year">年份</label>
+                        <input type="text" id="f_year" placeholder="如：2025">
+                    </div>
+                    <div class="admin-field">
+                        <label for="f_date">时间</label>
+                        <input type="text" id="f_date" placeholder="如：2025年3月">
+                    </div>
+                </div>
+                <div class="admin-field">
+                    <label for="f_title">详情页标题</label>
+                    <input type="text" id="f_title" placeholder="详情页大标题（留空则使用列表名称）">
+                </div>
+                <div class="admin-field">
+                    <label for="f_subtitle">详情页副标题</label>
+                    <input type="text" id="f_subtitle" placeholder="一句话概括">
+                </div>
+                <div class="admin-field">
+                    <label for="f_thumb">封面图地址</label>
+                    <input type="text" id="f_thumb" placeholder="如：assets/images/projects/fmimg/ds01.png">
+                    <div class="admin-field-hint">相对路径或完整 URL。主页列表与详情页共用此图。</div>
+                </div>
+                <div class="admin-field">
+                    <label for="f_description">详情页文案</label>
+                    <textarea id="f_description" placeholder="项目介绍正文，空行分段。" rows="6"></textarea>
+                </div>
+                <div class="admin-field">
+                    <label for="f_images">详情页图片（每行一个地址）</label>
+                    <textarea id="f_images" placeholder="assets/images/projects/fmimg/xxx.png&#10;https://..."></textarea>
+                    <div class="admin-field-hint">每行一个图片地址，按顺序在详情页展示。</div>
+                </div>
+                <div class="admin-field">
+                    <div class="admin-toggle">
+                        <input type="checkbox" id="f_visible" checked>
+                        <label for="f_visible">在主页与详情页中显示此项目</label>
+                    </div>
+                </div>
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-btn" id="cancelBtn">取消</button>
+                    <button type="submit" class="admin-btn primary">保存项目</button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="admin-toast" id="toast"></div>
+
+    <script>
+        (function () {
+            var STORAGE_KEY = 'jiatang_projects_v1';
+            var DEFAULT_URL = 'projects.json';
+
+            var listEl = document.getElementById('adminList');
+            var formSection = document.getElementById('formSection');
+            var formTitle = document.getElementById('formTitle');
+            var form = document.getElementById('projectForm');
+            var toastEl = document.getElementById('toast');
+
+            var projects = [];
+            var editingId = null;
+
+            function showToast(msg) {
+                toastEl.textContent = msg;
+                toastEl.classList.add('show');
+                clearTimeout(showToast._t);
+                showToast._t = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
+            }
+
+            function genId() {
+                return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            }
+
+            function loadDefault(cb) {
+                fetch(DEFAULT_URL, { cache: 'no-store' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) { cb(data.projects || []); })
+                    .catch(function () { cb([]); });
+            }
+
+            function load(cb) {
+                try {
+                    var cached = localStorage.getItem(STORAGE_KEY);
+                    if (cached) {
+                        var data = JSON.parse(cached);
+                        if (Array.isArray(data)) { cb(data); return; }
+                    }
+                } catch (e) {}
+                loadDefault(function (def) {
+                    projects = def.slice();
+                    save();
+                    cb(projects);
+                });
+            }
+
+            function save() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+            }
+
+            function escapeHtml(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            function renderList() {
+                if (!projects.length) {
+                    listEl.innerHTML = '<div class="admin-empty">暂无项目，点击右上角「新增项目」开始添加。</div>';
+                    return;
+                }
+                listEl.innerHTML = projects.map(function (p, i) {
+                    var thumb = p.thumb
+                        ? '<img src="' + escapeHtml(p.thumb) + '" alt="" onerror="this.style.display=\'none\'">'
+                        : '';
+                    var meta = [p.type, p.year, p.date].filter(Boolean).map(escapeHtml).join(' · ');
+                    var visLabel = p.visible === false ? '已隐藏' : '已显示';
+                    return '' +
+                    '<li class="admin-item' + (p.visible === false ? ' hidden-item' : '') + '" data-id="' + escapeHtml(p.id) + '">' +
+                        '<div class="admin-item-thumb">' + thumb + '</div>' +
+                        '<div class="admin-item-info">' +
+                            '<div class="admin-item-name">' + escapeHtml(p.name || '未命名') + '</div>' +
+                            '<div class="admin-item-meta">' + (meta || '—') + ' · ' + visLabel + '</div>' +
+                        '</div>' +
+                        '<div class="admin-item-actions">' +
+                            '<button type="button" class="admin-btn sm" data-act="toggle">' + (p.visible === false ? '显示' : '隐藏') + '</button>' +
+                            '<a class="admin-btn sm" href="project.html?id=' + encodeURIComponent(p.id) + '" target="_blank">预览</a>' +
+                            '<button type="button" class="admin-btn sm" data-act="edit">编辑</button>' +
+                            '<button type="button" class="admin-btn sm danger" data-act="delete">删除</button>' +
+                        '</div>' +
+                    '</li>';
+                }).join('');
+            }
+
+            function resetForm() {
+                editingId = null;
+                form.reset();
+                document.getElementById('f_id').value = '';
+                document.getElementById('f_visible').checked = true;
+                formTitle.textContent = '新增项目';
+            }
+
+            function openForm(p) {
+                editingId = p ? p.id : null;
+                formTitle.textContent = p ? '编辑项目' : '新增项目';
+                document.getElementById('f_id').value = p ? p.id : '';
+                document.getElementById('f_name').value = p ? (p.name || '') : '';
+                document.getElementById('f_type').value = p ? (p.type || '') : '';
+                document.getElementById('f_year').value = p ? (p.year || '') : '';
+                document.getElementById('f_date').value = p ? (p.date || '') : '';
+                document.getElementById('f_title').value = p ? (p.title || '') : '';
+                document.getElementById('f_subtitle').value = p ? (p.subtitle || '') : '';
+                document.getElementById('f_thumb').value = p ? (p.thumb || '') : '';
+                document.getElementById('f_description').value = p ? (p.description || '') : '';
+                var imgs = p && Array.isArray(p.images) ? p.images.join('\n') : '';
+                document.getElementById('f_images').value = imgs;
+                document.getElementById('f_visible').checked = p ? (p.visible !== false) : true;
+                formSection.style.display = 'block';
+                formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            function collectForm() {
+                var name = document.getElementById('f_name').value.trim();
+                if (!name) { showToast('请填写列表名称'); return null; }
+                var imgsRaw = document.getElementById('f_images').value
+                    .split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+                return {
+                    id: editingId || genId(),
+                    name: name,
+                    type: document.getElementById('f_type').value.trim(),
+                    year: document.getElementById('f_year').value.trim(),
+                    date: document.getElementById('f_date').value.trim(),
+                    title: document.getElementById('f_title').value.trim(),
+                    subtitle: document.getElementById('f_subtitle').value.trim(),
+                    thumb: document.getElementById('f_thumb').value.trim(),
+                    description: document.getElementById('f_description').value,
+                    images: imgsRaw,
+                    visible: document.getElementById('f_visible').checked
+                };
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var data = collectForm();
+                if (!data) return;
+                if (editingId) {
+                    var idx = projects.findIndex(function (p) { return p.id === editingId; });
+                    if (idx > -1) { projects[idx] = data; }
+                } else {
+                    projects.push(data);
+                }
+                save();
+                renderList();
+                resetForm();
+                formSection.style.display = 'none';
+                showToast(editingId ? '已更新项目' : '已新增项目');
+            });
+
+            document.getElementById('newBtn').addEventListener('click', function () {
+                resetForm();
+                openForm(null);
+            });
+            document.getElementById('cancelBtn').addEventListener('click', function () {
+                resetForm();
+                formSection.style.display = 'none';
+            });
+            document.getElementById('resetBtn').addEventListener('click', function () {
+                if (!confirm('确定恢复为默认数据？当前所有改动将被清除。')) return;
+                loadDefault(function (def) {
+                    projects = def.slice();
+                    save();
+                    renderList();
+                    resetForm();
+                    formSection.style.display = 'none';
+                    showToast('已恢复默认数据');
+                });
+            });
+
+            listEl.addEventListener('click', function (e) {
+                var btn = e.target.closest('button[data-act]');
+                if (!btn) return;
+                var li = btn.closest('.admin-item');
+                if (!li) return;
+                var id = li.getAttribute('data-id');
+                var p = projects.find(function (x) { return x.id === id; });
+                if (!p) return;
+                var act = btn.getAttribute('data-act');
+                if (act === 'toggle') {
+                    p.visible = p.visible === false ? true : false;
+                    save();
+                    renderList();
+                    showToast(p.visible ? '已显示「' + p.name + '」' : '已隐藏「' + p.name + '」');
+                } else if (act === 'edit') {
+                    openForm(p);
+                } else if (act === 'delete') {
+                    if (!confirm('确定删除「' + (p.name || '该项目') + '」？此操作不可撤销。')) return;
+                    projects = projects.filter(function (x) { return x.id !== id; });
+                    save();
+                    renderList();
+                    if (editingId === id) { resetForm(); formSection.style.display = 'none'; }
+                    showToast('已删除项目');
+                }
+            });
+
+            load(function (data) {
+                projects = data.slice();
+                renderList();
+            });
+        })();
+    </script>
+</body>
+</html>

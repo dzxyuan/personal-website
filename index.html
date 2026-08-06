@@ -189,7 +189,6 @@
                     <span class="word accent">工艺</span>
                     <span class="word">与</span>
                     <span class="word accent">品味</span>
-                    <span class="word">，</span>
                     <span class="word">赋能数字产品</span>
                 </h2>
                 <p class="manifesto-sub" data-reveal="fade-up">探索如何以工艺与品味，重塑 AI 时代的设计工作流，构建下一代数字产品。</p>
@@ -200,76 +199,7 @@
         <section class="panel panel-projects" data-panel="projects" id="projects">
             <div class="projects-inner">
                 <h3 class="section-label mono" data-reveal="fade-up">精选作品 / Selected Work</h3>
-                <ul class="project-list">
-                    <li class="project-item" data-reveal="slide-up-stagger">
-                        <a href="#" target="_blank" rel="noopener" class="project-link">
-                            <div class="project-thumb">
-                                <img src="assets/images/projects/fmimg/ds01.png" alt="项目1" onerror="this.parentElement.classList.add('thumb-placeholder')">
-                                <span class="thumb-fallback">01</span>
-                            </div>
-                            <div class="project-info">
-                                <span class="project-index mono">01</span>
-                                <span class="project-name">项目名称占位</span>
-                                <span class="project-type">设计项目</span>
-                            </div>
-                            <div class="project-meta">
-                                <span class="project-year mono">2025</span>
-                                <span class="project-arrow">↗</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="project-item" data-reveal="slide-up-stagger">
-                        <a href="#" target="_blank" rel="noopener" class="project-link">
-                            <div class="project-thumb">
-                                <img src="assets/images/projects/fmimg/inspire_mono_01.png" alt="项目2" onerror="this.parentElement.classList.add('thumb-placeholder')">
-                                <span class="thumb-fallback">02</span>
-                            </div>
-                            <div class="project-info">
-                                <span class="project-index mono">02</span>
-                                <span class="project-name">项目名称占位</span>
-                                <span class="project-type">Coding 项目</span>
-                            </div>
-                            <div class="project-meta">
-                                <span class="project-year mono">2025</span>
-                                <span class="project-arrow">↗</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="project-item" data-reveal="slide-up-stagger">
-                        <a href="#" target="_blank" rel="noopener" class="project-link">
-                            <div class="project-thumb">
-                                <img src="assets/images/projects/fmimg/wasm01.png" alt="项目3" onerror="this.parentElement.classList.add('thumb-placeholder')">
-                                <span class="thumb-fallback">03</span>
-                            </div>
-                            <div class="project-info">
-                                <span class="project-index mono">03</span>
-                                <span class="project-name">项目名称占位</span>
-                                <span class="project-type">设计工具</span>
-                            </div>
-                            <div class="project-meta">
-                                <span class="project-year mono">2024</span>
-                                <span class="project-arrow">↗</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="project-item" data-reveal="slide-up-stagger">
-                        <a href="#" target="_blank" rel="noopener" class="project-link">
-                            <div class="project-thumb">
-                                <img src="assets/images/projects/fmimg/wasm02.png" alt="项目4" onerror="this.parentElement.classList.add('thumb-placeholder')">
-                                <span class="thumb-fallback">04</span>
-                            </div>
-                            <div class="project-info">
-                                <span class="project-index mono">04</span>
-                                <span class="project-name">项目名称占位</span>
-                                <span class="project-type">设计项目</span>
-                            </div>
-                            <div class="project-meta">
-                                <span class="project-year mono">2024</span>
-                                <span class="project-arrow">↗</span>
-                            </div>
-                        </a>
-                    </li>
-                </ul>
+                <ul class="project-list" id="projectList"></ul>
             </div>
         </section>
 
@@ -320,6 +250,87 @@
     </div>
     <!-- /.liquid-distort -->
 
+    <script>
+    /* 作品列表动态渲染：localStorage 优先，回退 projects.json */
+    (function () {
+        var STORAGE_KEY = 'jiatang_projects_v1';
+        var listEl = document.getElementById('projectList');
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function render(projects, fromAsync) {
+            var visible = (projects || []).filter(function (p) { return p.visible !== false; });
+            if (!visible.length) {
+                listEl.innerHTML = '<li class="admin-empty" style="text-align:center;color:var(--text-tertiary);font-family:var(--font-mono);font-size:13px;padding:32px 0;">暂无作品，可在 admin.html 中添加。</li>';
+                return;
+            }
+            listEl.innerHTML = visible.map(function (p, i) {
+                var idx = String(i + 1).padStart(2, '0');
+                var thumb = p.thumb
+                    ? '<img src="' + escapeHtml(p.thumb) + '" alt="' + escapeHtml(p.name || '') + '" onerror="this.parentElement.classList.add(\'thumb-placeholder\')">'
+                    : '';
+                return '' +
+                '<li class="project-item" data-reveal="slide-up-stagger">' +
+                    '<a href="project.html?id=' + encodeURIComponent(p.id) + '" class="project-link">' +
+                        '<div class="project-thumb">' + thumb +
+                            '<span class="thumb-fallback">' + idx + '</span>' +
+                        '</div>' +
+                        '<div class="project-info">' +
+                            '<span class="project-index mono">' + idx + '</span>' +
+                            '<span class="project-name">' + escapeHtml(p.name || '未命名项目') + '</span>' +
+                            (p.type ? '<span class="project-type">' + escapeHtml(p.type) + '</span>' : '') +
+                        '</div>' +
+                        '<div class="project-meta">' +
+                            (p.year ? '<span class="project-year mono">' + escapeHtml(p.year) + '</span>' : '') +
+                            '<span class="project-arrow">↗</span>' +
+                        '</div>' +
+                    '</a>' +
+                '</li>';
+            }).join('');
+
+            if (visible.length > 4) {
+                listEl.classList.add('has-many');
+            } else {
+                listEl.classList.remove('has-many');
+            }
+
+            // 异步渲染时 main.js 的揭示逻辑已初始化，需手动触发可见
+            if (fromAsync) {
+                var items = listEl.querySelectorAll('[data-reveal]');
+                Array.prototype.forEach.call(items, function (el, i) {
+                    setTimeout(function () { el.classList.add('is-visible'); }, 100 + i * 60);
+                });
+            }
+        }
+
+        // 同步优先：localStorage 命中则在 main.js 初始化前完成渲染，可被滚动揭示接管
+        var cached = null;
+        try { cached = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
+        if (Array.isArray(cached)) {
+            render(cached, false);
+        } else {
+            // 首次访问：回退到 projects.json
+            fetch('projects.json', { cache: 'no-store' })
+                .then(function (r) { return r.json(); })
+                .then(function (data) { render(data.projects || [], true); })
+                .catch(function () { render([], true); });
+        }
+
+        // 后台保存后，同浏览器多标签页同步更新
+        window.addEventListener('storage', function (e) {
+            if (e.key === STORAGE_KEY) {
+                try {
+                    var data = JSON.parse(e.newValue);
+                    if (Array.isArray(data)) { render(data, true); }
+                } catch (err) {}
+            }
+        });
+    })();
+    </script>
     <script src="js/main.js"></script>
     <script type="module" src="js/character3d.js"></script>
 </body>
