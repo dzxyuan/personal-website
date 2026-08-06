@@ -1075,7 +1075,7 @@
             const repelForce = 3.5;
             const shearForce = 0.8;
             const particleRepelRadius = 80; // 粒子间软排斥半径
-            const particleRepelForce = 0.15; // 粒子间软排斥力
+            const particleRepelForce = 0.06; // 粒子间软排斥力（降低避免抖动）
 
             // 更新鼠标速度
             if (mouse.active) {
@@ -1113,14 +1113,14 @@
                 p.vx += (Math.random() - 0.5) * jitter;
                 p.vy += (Math.random() - 0.5) * jitter;
 
-                // 阻尼（鼠标静止时阻尼更大，快速稳定）
-                const friction = mouse.active ? 0.96 : 0.9;
+                // 阻尼（低阻尼让粒子运动更丝滑）
+                const friction = mouse.active ? 0.985 : 0.95;
                 p.vx *= friction;
                 p.vy *= friction;
-                p.angularVel *= 0.96;
+                p.angularVel *= 0.98;
 
                 // 限速
-                const maxSpeed = 10;
+                const maxSpeed = 14;
                 const speed = Math.hypot(p.vx, p.vy);
                 if (speed > maxSpeed) {
                     p.vx = (p.vx / speed) * maxSpeed;
