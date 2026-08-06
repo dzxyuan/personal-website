@@ -1332,6 +1332,12 @@ body.detail-page {
     cursor: auto;
     background: var(--bg-2);
 }
+body.detail-page,
+body.detail-page html,
+body.detail-page html body {
+    height: auto !important;
+    overflow: auto !important;
+}
 body.detail-page a, body.detail-page button, body.detail-page input, body.detail-page textarea {
     cursor: auto;
 }
@@ -1351,6 +1357,20 @@ body.detail-page a, body.detail-page button, body.detail-page input, body.detail
 }
 .detail-nav a:hover { color: var(--text-primary); }
 .detail-nav .nav-logo { font-family: var(--font-heading); font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.detail-nav .nav-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 999px;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+    color: var(--text-primary);
+    background: #fff;
+    transition: all 0.25s var(--ease-out);
+}
+.detail-nav .nav-back:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateX(-2px);
+}
 
 .detail-wrap {
     max-width: 960px; margin: 0 auto;
@@ -1395,11 +1415,21 @@ body.detail-page a, body.detail-page button, body.detail-page input, body.detail
     padding-top: 32px; border-top: 1px solid var(--border);
 }
 .detail-footer a {
-    font-family: var(--font-mono); font-size: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 999px;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 14px; font-weight: 500;
     color: var(--text-primary);
-    transition: color 0.3s var(--ease-out);
+    background: #fff;
+    transition: all 0.25s var(--ease-out);
 }
-.detail-footer a:hover { color: var(--accent); }
+.detail-footer a:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateX(var(--dir, 0));
+}
+.detail-footer a:first-child:hover { --dir: -2px; }
+.detail-footer a:last-child:hover { --dir: 2px; }
 .detail-empty {
     text-align: center; padding: 120px var(--pad);
     color: var(--text-tertiary);
@@ -1421,6 +1451,12 @@ body.admin-page {
     cursor: auto;
     background: var(--bg-1);
     color: var(--text-primary);
+}
+body.admin-page,
+body.admin-page html,
+body.admin-page html body {
+    height: auto !important;
+    overflow: auto !important;
 }
 body.admin-page a, body.admin-page button, body.admin-page input, body.admin-page textarea, body.admin-page select, body.admin-page label {
     cursor: auto !important;

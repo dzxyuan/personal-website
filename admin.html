@@ -16,6 +16,7 @@
             <h1>作品管理</h1>
             <div class="admin-actions">
                 <a href="index.html" class="admin-btn">查看主页 ↗</a>
+                <button type="button" class="admin-btn" id="exportBtn">导出 JSON</button>
                 <button type="button" class="admin-btn" id="resetBtn">恢复默认</button>
                 <button type="button" class="admin-btn primary" id="newBtn">+ 新增项目</button>
             </div>
@@ -255,6 +256,21 @@
                     formSection.style.display = 'none';
                     showToast('已恢复默认数据');
                 });
+            });
+
+            document.getElementById('exportBtn').addEventListener('click', function () {
+                var data = { projects: projects };
+                var json = JSON.stringify(data, null, 2);
+                var blob = new Blob([json], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'projects.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('已导出 projects.json，替换文件后重新部署即可全站同步');
             });
 
             listEl.addEventListener('click', function (e) {
