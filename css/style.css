@@ -783,9 +783,13 @@ html, body { height: 100%; overflow: hidden; }
 
 .thumb-fallback {
     position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
+    display: none;
+    align-items: center; justify-content: center;
     font-family: var(--font-mono); font-size: 32px;
     font-weight: 700; color: rgba(0,0,0,0.2);
+}
+.project-thumb.thumb-placeholder .thumb-fallback {
+    display: flex;
 }
 
 .project-info {
