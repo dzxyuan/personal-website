@@ -2,6 +2,7 @@
 /* 独立 ES Module，加载 assets/3d/IP3d.glb 并实现鼠标跟随旋转 */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 (function () {
@@ -89,6 +90,9 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
         if (modelLoaded || modelLoading) return;
         modelLoading = true;
         const loader = new GLTFLoader();
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+        loader.setDRACOLoader(dracoLoader);
         loader.load(
             'assets/3d/IP3d.glb',
             (gltf) => {

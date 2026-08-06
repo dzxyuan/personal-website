@@ -655,12 +655,15 @@
     /* ---------- 9. 底部栏滚动隐藏 ---------- */
     function initBottombarScroll() {
         const bar = document.getElementById('bottombar');
+        const nav = document.getElementById('siteNav');
         const container = document.getElementById('scrollContainer');
         if (!bar || !container) return;
         let last = 0;
         container.addEventListener('scroll', () => {
             const cur = container.scrollTop;
-            bar.classList.toggle('is-hidden', cur > 100 && cur > last);
+            const hidden = cur > 100 && cur > last;
+            bar.classList.toggle('is-hidden', hidden);
+            if (nav) nav.classList.toggle('is-hidden', hidden);
             last = cur;
         }, { passive: true });
     }
@@ -674,6 +677,7 @@
         let transitionLock = false;
         let overlay = null;
         let isProgrammaticScroll = false;
+        const isMobile = () => window.innerWidth <= 768;
 
         function getPanelHeight() { return container.clientHeight; }
 
@@ -820,9 +824,10 @@
             `;
         }
 
-        // 滚轮
+        // 滚轮 - 移动端不拦截，使用原生滚动
         let wheelAccum = 0;
         document.addEventListener('wheel', (e) => {
+            if (isMobile()) return; // 移动端使用原生滚动
             if (!container.contains(document.elementFromPoint(e.clientX, e.clientY))) return;
             e.preventDefault();
             if (transitionLock) return;
@@ -835,13 +840,14 @@
             snapToPanel(activeIdx + (dir === 'down' ? 1 : -1), dir);
         }, { passive: false });
 
-        // 触摸
+        // 触摸 - 移动端使用 CSS scroll-snap，不拦截
         let touchStartY = 0;
         container.addEventListener('touchstart', (e) => {
             touchStartY = e.touches[0].clientY;
         }, { passive: true });
 
         container.addEventListener('touchend', (e) => {
+            if (isMobile()) return; // 移动端让 CSS scroll-snap 接管
             if (transitionLock) return;
             const touchEndY = e.changedTouches[0].clientY;
             const dy = touchStartY - touchEndY;
@@ -911,6 +917,8 @@
             charStage.addEventListener('mouseleave', () => { insideStage = false; hideCard(); });
             charCard.addEventListener('mouseenter', () => { insideCard = true; });
             charCard.addEventListener('mouseleave', () => { insideCard = false; hideCard(); });
+            // 移动端：触摸时显示卡片
+            charStage.addEventListener('touchstart', () => { showCard(); }, { passive: true });
         }
 
         // 初始化
@@ -963,10 +971,12 @@
 
         function createParticles() {
             particles = [];
-            const count = Math.min(65, Math.floor((W * H) / 18000));
+            const isMobile = window.innerWidth < 768;
+            const maxCount = isMobile ? 35 : 65;
+            const density = isMobile ? 25000 : 18000;
+            const count = Math.min(maxCount, Math.floor((W * H) / density));
             for (let i = 0; i < count; i++) {
-                const sizeR = Math.random();
-                const size = sizeR < 0.6 ? 8 + Math.random() * 10 : 18 + Math.random() * 18;
+                const size = isMobile ? 10 + Math.random() * 5 : 16 + Math.random() * 6;
                 particles.push({
                     x: Math.random() * W,
                     y: Math.random() * H,
@@ -1071,11 +1081,14 @@
             ctx.fillStyle = 'rgba(250, 250, 248, 0.25)';
             ctx.fillRect(0, 0, W, H);
 
-            const mouseRadius = 220;
-            const repelForce = 3.5;
-            const shearForce = 0.8;
-            const particleRepelRadius = 80; // 粒子间软排斥半径
-            const particleRepelForce = 0.06; // 粒子间软排斥力（降低避免抖动）
+            // 鼠标作为物理碰撞体：核心碰撞半径 + 外围软推力
+            const mouseCollisionRadius = 40; // 硬碰撞半径（快速弹开）
+            const mouseFieldRadius = 180;   // 软推力半径（渐变减速）
+            const mouseImpulse = 22;        // 碰撞冲量强度（大幅提高初始速度）
+            const mouseFieldForce = 1.5;    // 软推力强度
+            const shearForce = 0.6;
+            const particleRepelRadius = 120;
+            const particleRepelForce = 0.15;
 
             // 更新鼠标速度
             if (mouse.active) {
@@ -1086,41 +1099,62 @@
             }
 
             particles.forEach((p) => {
-                // 鼠标排斥力（径向推开）
                 if (mouse.active) {
                     const dx = p.x - mouse.x;
                     const dy = p.y - mouse.y;
                     const distSq = dx * dx + dy * dy;
                     const dist = Math.sqrt(distSq);
-                    if (dist < mouseRadius && dist > 0) {
-                        const strength = (1 - dist / mouseRadius);
-                        const force = strength * strength * repelForce;
+                    const pHalf = p.size / 2;
+
+                    // 硬碰撞：鼠标核心区碰到粒子 → 强烈弹开（像台球撞击）
+                    if (dist < mouseCollisionRadius + pHalf && dist > 0) {
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        // 反射现有速度 + 施加冲量
+                        const dot = p.vx * nx + p.vy * ny;
+                        if (dot < 0) {
+                            p.vx -= 2 * dot * nx * 0.8; // 反射（80%弹性）
+                            p.vy -= 2 * dot * ny * 0.8;
+                        }
+                        // 额外冲量推开
+                        p.vx += nx * mouseImpulse;
+                        p.vy += ny * mouseImpulse;
+                        // 强烈旋转
+                        p.angularVel += (Math.random() - 0.5) * 0.8;
+                        // 位置修正防止穿透
+                        const overlap = (mouseCollisionRadius + pHalf) - dist;
+                        p.x += nx * overlap;
+                        p.y += ny * overlap;
+                    }
+                    // 软推力：鼠标外围区 → 渐变推开
+                    else if (dist < mouseFieldRadius && dist > 0) {
+                        const strength = (1 - dist / mouseFieldRadius);
+                        const force = strength * strength * mouseFieldForce;
                         p.vx += (dx / dist) * force;
                         p.vy += (dy / dist) * force;
-                        p.angularVel += (Math.random() - 0.5) * strength * 0.2;
                     }
 
-                    // 鼠标剪切力（拖动时带动粒子）
-                    if (dist < mouseRadius * 1.2 && dist > 0) {
-                        const shearFactor = (1 - dist / (mouseRadius * 1.2)) * shearForce;
+                    // 鼠标剪切力
+                    if (dist < mouseFieldRadius * 1.2 && dist > 0) {
+                        const shearFactor = (1 - dist / (mouseFieldRadius * 1.2)) * shearForce;
                         p.vx += mouse.vx * shearFactor;
                         p.vy += mouse.vy * shearFactor;
                     }
                 }
 
                 // 微扰动
-                const jitter = mouse.active ? 0.04 : 0.01;
+                const jitter = mouse.active ? 0.02 : 0.005;
                 p.vx += (Math.random() - 0.5) * jitter;
                 p.vy += (Math.random() - 0.5) * jitter;
 
-                // 阻尼（低阻尼让粒子运动更丝滑）
-                const friction = mouse.active ? 0.985 : 0.95;
+                // 阻尼（极低：让粒子高速弹开后缓慢减速）
+                const friction = mouse.active ? 0.998 : 0.99;
                 p.vx *= friction;
                 p.vy *= friction;
-                p.angularVel *= 0.98;
+                p.angularVel *= 0.993;
 
                 // 限速
-                const maxSpeed = 14;
+                const maxSpeed = 24;
                 const speed = Math.hypot(p.vx, p.vy);
                 if (speed > maxSpeed) {
                     p.vx = (p.vx / speed) * maxSpeed;
@@ -1132,17 +1166,17 @@
                 p.y += p.vy;
                 p.rotation += p.angularVel;
 
-                // 边界碰撞
+                // 边界碰撞（高弹性反弹）
                 const halfS = p.size / 2;
-                if (p.x < halfS) { p.x = halfS; p.vx = Math.abs(p.vx) * p.restitution; }
-                if (p.x > W - halfS) { p.x = W - halfS; p.vx = -Math.abs(p.vx) * p.restitution; }
-                if (p.y < halfS) { p.y = halfS; p.vy = Math.abs(p.vy) * p.restitution; }
-                if (p.y > H - halfS) { p.y = H - halfS; p.vy = -Math.abs(p.vy) * p.restitution; }
+                if (p.x < halfS) { p.x = halfS; p.vx = Math.abs(p.vx) * 0.7; }
+                if (p.x > W - halfS) { p.x = W - halfS; p.vx = -Math.abs(p.vx) * 0.7; }
+                if (p.y < halfS) { p.y = halfS; p.vy = Math.abs(p.vy) * 0.7; }
+                if (p.y > H - halfS) { p.y = H - halfS; p.vy = -Math.abs(p.vy) * 0.7; }
 
                 drawShape(p);
             });
 
-            // 粒子间软排斥力（使粒子自然均匀分布，不固定在原位置）
+            // 粒子间软排斥力（最终均匀分布）
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
                     const a = particles[i];
@@ -1150,7 +1184,6 @@
                     const dx = b.x - a.x;
                     const dy = b.y - a.y;
                     const distSq = dx * dx + dy * dy;
-                    // 软排斥：在排斥半径内推开，但不做硬碰撞
                     if (distSq < particleRepelRadius * particleRepelRadius && distSq > 0) {
                         const dist = Math.sqrt(distSq);
                         const strength = (1 - dist / particleRepelRadius);
@@ -1191,7 +1224,7 @@
                             const dvy = b.vy - a.vy;
                             const dot = dvx * nx + dvy * ny;
                             if (dot < 0) {
-                                const restitution = 0.45;
+                                const restitution = 0.75;
                                 const impulse = -(1 + restitution) * dot / totalMass;
                                 a.vx -= impulse * b.mass * nx;
                                 a.vy -= impulse * b.mass * ny;
@@ -1228,6 +1261,16 @@
         });
 
         // 触摸支持
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            mouse.x = touch.clientX - rect.left;
+            mouse.y = touch.clientY - rect.top;
+            mouse.px = mouse.x;
+            mouse.py = mouse.y;
+            mouse.active = true;
+        }, { passive: false });
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();

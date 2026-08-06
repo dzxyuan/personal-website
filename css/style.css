@@ -804,6 +804,7 @@ html, body { height: 100%; overflow: hidden; }
     padding: 0 var(--pad);
     text-align: center;
     overflow: hidden;
+    position: relative;
 }
 
 .particle-canvas {
@@ -984,40 +985,242 @@ html, body { height: 100%; overflow: hidden; }
    响应式
    ============================================ */
 @media (max-width: 768px) {
-    :root { --pad: 24px; }
-    body { cursor: auto; overflow: auto; }
-    html { overflow: auto; }
-    .scroll-container { overflow: visible; height: auto; }
-    .panel { min-height: auto; padding: 80px 0 !important; }
+    :root { --pad: 16px; --container-max: 100%; }
+    body { cursor: auto; overflow: hidden; height: 100svh; }
+    html { overflow: hidden; width: 100%; height: 100svh; }
+    .scroll-container {
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: 100svh;
+        scroll-snap-type: y mandatory;
+    }
+    .panel {
+        min-height: 100svh;
+        height: 100svh;
+        padding: 0 !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+        position: relative;
+        overflow: hidden;
+    }
 
     .cursor-pointer { display: none; }
 
-    .bottombar { padding: 14px var(--pad); }
-    .bottombar-inner { flex-wrap: wrap; gap: 6px; }
-    .bottombar-center { display: none; }
-
-    .hero-3d { display: none; }
-    .falling-layer { display: none; }
-
-    .project-link {
-        grid-template-columns: 100px 1fr auto;
-        gap: 20px; padding: 16px 8px;
+    /* 导航栏 - 移到底部，仅显示链接，增大触摸区域 */
+    .site-nav {
+        position: fixed;
+        top: auto;
+        bottom: 36px;
+        left: 0;
+        right: 0;
+        padding: 6px var(--pad);
+        z-index: 9000;
+        background: rgba(250, 250, 248, 0.85);
+        backdrop-filter: blur(12px) saturate(1.3);
+        -webkit-backdrop-filter: blur(12px) saturate(1.3);
+        border-top: 1px solid var(--border);
+        transition: transform 0.6s var(--ease-out), opacity 0.6s;
     }
-    .project-link:hover { padding-left: 16px; padding-right: 16px; }
-    .project-thumb { width: 90px; height: 60px; }
-    .project-name { font-size: 18px; }
-    .project-type { display: none; }
+    .site-nav.is-hidden { transform: translateY(140%); opacity: 0; }
+    .nav-inner { justify-content: center; gap: 0; }
+    .nav-logo { display: none; }
+    .nav-cta { display: none; }
+    .nav-links {
+        gap: 0;
+        flex-shrink: 0;
+        min-width: 0;
+        width: 100%;
+        justify-content: space-around;
+    }
+    .nav-links li { white-space: nowrap; }
+    .nav-link {
+        font-size: 14px;
+        padding: 10px 14px;
+        white-space: nowrap;
+        display: inline-block;
+    }
+    .nav-link.is-active { padding: 6px 14px; margin: 0; border-radius: 8px; }
 
-    .cta-title { font-size: 42px; }
+    /* 底部信息栏 */
+    .bottombar { padding: 8px var(--pad); font-size: 12px; }
+    .bottombar-inner { flex-wrap: nowrap; gap: 6px; justify-content: space-between; }
+    .bottombar-center { display: none; }
+    .bottombar .mono { font-size: 12px; }
+
+    /* Hero 首屏 - 保留下落素材效果 */
+    .hero-3d { display: none; }
+    .panel-hero { padding-top: 0 !important; padding-bottom: 90px !important; }
+    .hero-content { padding: 0 var(--pad); width: 100%; max-width: 100%; margin: 0; }
+    .hero-identity { margin-bottom: 0; }
+    .hero-tagline { font-size: 13px; letter-spacing: 0.12em; margin-bottom: 20px; }
+    .hero-title {
+        font-size: 36px;
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+        text-align: center;
+    }
+    .hero-title .hero-line { display: block; white-space: nowrap; }
+
+    /* 下落素材 - 移动端统一缩小 */
+    .falling-layer { display: block; }
+    .falling-layer .s-1,
+    .falling-layer .s-2,
+    .falling-layer .s-3,
+    .falling-layer .s-4,
+    .falling-layer .s-5,
+    .falling-layer .s-6,
+    .falling-layer .s-7,
+    .falling-layer .s-8,
+    .falling-layer .s-9,
+    .falling-layer .s-10,
+    .falling-layer .s-11,
+    .falling-layer .s-12,
+    .char-falling .c-s-1,
+    .char-falling .c-s-2,
+    .char-falling .c-s-3,
+    .char-falling .c-s-4,
+    .char-falling .c-s-5,
+    .char-falling .c-s-6,
+    .char-falling .c-s-7,
+    .char-falling .c-s-8 {
+        width: clamp(48px, 12vw, 80px) !important;
+        height: clamp(48px, 12vw, 80px) !important;
+    }
+
+    /* 3D 角色屏 */
+    .panel-character { padding: 0 !important; padding-bottom: 90px !important; }
+    .char-stage {
+        max-width: 100%;
+        padding: 0 var(--pad);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+    .char-3d {
+        max-width: 100%;
+        height: 50vh;
+        max-height: 50vh;
+    }
+    .char-card {
+        max-width: calc(100% - 32px) !important;
+        padding: 16px 18px !important;
+        bottom: 100px !important;
+    }
+    .char-card-name { font-size: 18px !important; }
+    .char-card-role { font-size: 13px !important; }
+    .char-card-desc { font-size: 14px !important; line-height: 1.6 !important; }
+    .char-card-tags { gap: 6px; }
+    .char-tag { font-size: 12px; padding: 4px 10px; }
+
+    /* 理念屏 */
+    .panel-manifesto { padding: 0 !important; padding-bottom: 90px !important; }
+    .manifesto-inner {
+        padding: 0 var(--pad);
+        width: 100%;
+        text-align: center;
+    }
+    .manifesto-title {
+        font-size: 30px;
+        line-height: 1.12;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+        white-space: nowrap;
+    }
+    .manifesto-sub { font-size: 15px; max-width: 320px; margin: 0 auto; line-height: 1.6; }
+
+    /* 作品模块 - 单屏内自适应 */
+    .panel-projects {
+        padding: 0 !important;
+        padding-bottom: 90px !important;
+        overflow: hidden;
+    }
+    .projects-inner {
+        padding: 40px var(--pad) 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .section-label { font-size: 14px; margin-bottom: 16px; flex-shrink: 0; }
+    .project-list {
+        list-style: none;
+        border-top: 1px solid var(--border);
+        max-width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+    }
+    .project-item { border-bottom: 1px solid var(--border); overflow: hidden; flex: 1; display: flex; align-items: center; }
+    .project-link {
+        grid-template-columns: 64px 1fr auto;
+        gap: 12px;
+        padding: 10px 6px;
+    }
+    .project-link:hover { padding-left: 12px; padding-right: 12px; }
+    .project-thumb { width: 64px; height: 46px; border-radius: 8px; }
+    .project-name { font-size: 16px; }
+    .project-type { display: none; }
+    .project-index { font-size: 13px; min-width: 24px; }
+    .project-year { font-size: 12px; }
+    .project-arrow { font-size: 16px; }
+    .thumb-fallback { font-size: 20px; }
+
+    /* CTA 粒子屏 */
+    .panel-cta { padding: 0 !important; padding-bottom: 90px !important; }
+    .cta-inner {
+        padding: 0 var(--pad);
+        width: 100%;
+        text-align: center;
+    }
+    .cta-small { font-size: 13px; margin-bottom: 24px; }
+    .cta-title {
+        font-size: 32px;
+        line-height: 1.12;
+        letter-spacing: -0.02em;
+        margin-bottom: 40px;
+        white-space: nowrap;
+    }
     .cta-email { font-size: 16px; }
     .scroll-hint { display: none; }
+    .particle-canvas { touch-action: none; }
 }
 
 @media (max-width: 480px) {
-    .hero-title { font-size: 42px; }
-    .manifesto-title { font-size: 34px; }
-    .cta-title { font-size: 42px; }
-    .loader-text { font-size: 22px; }
+    :root { --pad: 12px; }
+    .nav-link { font-size: 13px; padding: 8px 10px; }
+    .hero-tagline { font-size: 12px; margin-bottom: 16px; }
+    .hero-title { font-size: 30px; }
+    .manifesto-title { font-size: 26px; }
+    .cta-title { font-size: 28px; }
+    .cta-email { font-size: 15px; }
+    .loader-text { font-size: 20px; }
+    .project-link {
+        grid-template-columns: 56px 1fr auto;
+        gap: 10px; padding: 8px 4px;
+    }
+    .project-thumb { width: 56px; height: 40px; }
+    .project-name { font-size: 15px; }
+    .project-arrow { font-size: 15px; }
+    .project-year { font-size: 12px; }
+    .project-index { font-size: 12px; }
+    .section-label { font-size: 13px; }
+    .char-3d { height: 45vh; max-height: 45vh; }
+    .char-card-name { font-size: 16px !important; }
+    .char-card-role { font-size: 12px !important; }
+    .char-card-desc { font-size: 13px !important; }
+    .char-tag { font-size: 12px; padding: 3px 8px; }
+    .manifesto-sub { font-size: 14px; }
+    .cta-small { font-size: 12px; }
+    .bottombar { font-size: 12px; }
+    .bottombar .mono { font-size: 12px; }
 }
 
 /* ============================================
