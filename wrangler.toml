@@ -1,0 +1,7 @@
+name = "jiatang-design"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "PROJECTS_KV"
+id = "239b5928d0f54f7799d99f8a3637466e"
