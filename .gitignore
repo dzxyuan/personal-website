@@ -8,7 +8,9 @@ __pycache__/
 
 # 本地工具/缓存目录
 .tmp/
+.wrangler/
 .wrangler-config/
 .xdg/
 .vercel/
 .netlify/
+package-lock.json
