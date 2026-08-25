@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="detail-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全部作品 — 加糖</title>
+    <meta name="description" content="加糖，UI/UX 设计师。全部作品列表。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=202608253000">
+    <link rel="stylesheet" href="css/responsive.css?v=202608253000">
+    <style>
+        /* works.html 专属布局样式 — 卡片复用首页 fan-card 紧凑样式 */
+        :root {
+            --accent: #b0e02e;
+        }
+
+        body {
+            background: var(--bg-2);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            overflow-y: auto !important;
+            cursor: auto;
+        }
+        /* 覆盖 style.css 中的 overflow: hidden，允许列表页滚动 */
+        html, body { overflow-y: auto !important; height: auto !important; min-height: 100vh; }
+        /* 覆盖 detail-page 的 padding-top（因为 works-nav 是 sticky 而非 fixed） */
+        body.detail-page { padding-top: 0 !important; }
+        body.dark-mode {
+            --bg-2: #0e0e0e;
+            --bg-3: #141414;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #39FF14;
+            background: var(--bg-2);
+            color: var(--text-primary);
+        }
+
+        /* Nav — sticky 固定在顶部，不随滚动消失 */
+        .works-nav {
+            position: sticky; top: 0; z-index: 9000;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 32px;
+            min-height: 79px;
+            box-sizing: border-box;
+            background: rgba(250, 250, 248, 0.95);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        body.dark-mode .works-nav { background: rgba(14, 14, 14, 0.95); }
+        .works-nav .nav-logo {
+            display: flex; align-items: center; gap: 6px;
+            font-family: var(--font-heading);
+            font-weight: 700; font-size: 18px; letter-spacing: -0.02em;
+            text-decoration: none; color: inherit;
+            cursor: pointer;
+        }
+        .works-nav .nav-logo-icon { width: 24px; height: 24px; flex-shrink: 0; }
+        .works-nav .nav-logo .dot { color: var(--accent); }
+        .works-nav .nav-actions { display: flex; align-items: center; gap: 10px; }
+        .works-nav .nav-back {
+            text-decoration: none; color: inherit; font-size: 13px;
+            opacity: 0.7; transition: opacity 0.2s; cursor: pointer;
+        }
+        .works-nav .nav-back:hover { opacity: 1; }
+
+        /* Theme toggle - 与主页一致 */
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s, border-color 0.3s;
+            pointer-events: auto;
+            flex-shrink: 0;
+        }
+        .theme-toggle:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        .theme-icon-sun { display: none; }
+        .theme-icon-moon { display: block; }
+        body.dark-mode .theme-icon-sun { display: block; }
+        body.dark-mode .theme-icon-moon { display: none; }
+
+        /* Hero */
+        .works-hero { padding: 48px 24px 20px; text-align: center; }
+        .works-hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(26px, 5vw, 44px);
+            font-weight: 700; margin: 0 0 8px; letter-spacing: -0.02em;
+        }
+        .works-hero .sub {
+            font-size: 12px; opacity: 0.6; letter-spacing: 0.15em; text-transform: uppercase;
+        }
+
+        /* Grid 布局 — 复用 fan-card 样式但改为流式布局 */
+        .works-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 14px;
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 覆盖 fan-card 的 PC 端 absolute 定位，改为 grid 流式 */
+        .works-grid .fan-card {
+            position: relative !important;
+            left: auto !important;
+            top: auto !important;
+            width: 100% !important;
+            max-width: none !important;
+            height: 230px !important;
+            max-height: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition: transform 0.35s cubic-bezier(.25,.46,.45,.94), box-shadow 0.35s ease !important;
+            transition-delay: 0s !important;
+            margin: 0 !important;
+            padding: 10px !important;
+            border-radius: 14px !important;
+            gap: 6px !important;
+            cursor: pointer !important;
+            text-align: left !important;
+            --fan-shift-x: initial !important;
+            --fan-rot: initial !important;
+            --fan-shift-y: initial !important;
+            --fan-scale: initial !important;
+        }
+
+        /* 统一卡片内所有文字左对齐 */
+        .works-grid .fan-card * { text-align: left !important; }
+
+        /* 列表页显示所有卡片，覆盖 responsive.css 中"只显示前4张"的规则 */
+        .works-grid .fan-card:nth-child(n+5) { display: flex !important; }
+
+        .works-grid .fan-card:hover {
+            transform: translateY(-6px) !important;
+        }
+
+        /* 卡片内元素 — 与首页移动端一致的比例和字号 */
+        .works-grid .fan-card .project-thumb {
+            width: 100% !important;
+            flex: 0 0 auto !important;
+            aspect-ratio: 16/9 !important;
+            min-height: 0 !important;
+            position: relative !important;
+            border-radius: 10px !important;
+            overflow: hidden !important;
+            margin-bottom: 2px !important;
+        }
+        .works-grid .fan-card .project-thumb img {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        .works-grid .fan-card .project-info {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            padding: 0 !important;
+            flex: 1 1 auto !important;
+            width: 100% !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
+        .works-grid .fan-card .project-title-block {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        .works-grid .fan-card .project-name {
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            line-height: 1.3 !important;
+            white-space: normal !important;
+            overflow: hidden !important;
+            text-overflow: clip !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 1 !important;
+            -webkit-box-orient: vertical !important;
+        }
+        .works-grid .fan-card .project-subtitle {
+            font-size: 12px !important;
+            white-space: normal !important;
+            overflow: hidden !important;
+            text-overflow: clip !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 1 !important;
+            -webkit-box-orient: vertical !important;
+            line-height: 1.3 !important;
+            color: #888 !important;
+        }
+        .works-grid .fan-card .project-meta {
+            flex-direction: row !important;
+            gap: 4px !important;
+            margin-top: auto !important;
+            padding-top: 4px !important;
+            min-width: auto !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            flex-wrap: nowrap !important;
+        }
+        .works-grid .fan-card .project-meta .meta-left {
+            display: flex !important;
+            align-items: center !important;
+            align-self: auto !important;
+        }
+        .works-grid .fan-card .project-meta .meta-right {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            align-self: auto !important;
+        }
+        .works-grid .fan-card .project-type {
+            font-size: 12px !important;
+            padding: 2px 6px !important;
+            min-width: auto !important;
+            border-radius: 6px !important;
+        }
+        .works-grid .fan-card .project-year { font-size: 12px !important; }
+        .works-grid .fan-card .project-arrow { font-size: 13px !important; }
+
+        .works-grid .project-link,
+        .works-grid .project-thumb {
+            cursor: pointer !important;
+        }
+
+        /* 空状态 */
+        .w-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.5;
+        }
+        .w-empty h2 { font-size: 24px; margin-bottom: 8px; }
+        .w-empty p { font-size: 14px; }
+
+        /* 移动端字号缩小 — 与首页 site-nav 完全一致 */
+        @media (max-width: 768px) {
+            .works-nav { padding: 10px 16px; min-height: 51px; }
+            .works-nav .nav-logo { font-size: 15px; }
+            .works-nav .nav-logo-icon { width: 22px; height: 22px; }
+            .works-nav .nav-actions { gap: 8px; }
+            .works-nav .nav-back { font-size: 12px; }
+            .works-nav .theme-toggle { width: 30px; height: 30px; }
+            .works-nav .theme-toggle svg { width: 14px; height: 14px; }
+            .works-hero { padding: 36px 16px 14px; }
+            .works-hero h1 { font-size: clamp(22px, 5vw, 32px); margin-bottom: 6px; }
+            .works-hero .sub { font-size: 12px; }
+            .works-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 16px;
+            }
+            .works-grid .fan-card {
+                height: 185px !important;
+                padding: 10px !important;
+                border-radius: 12px !important;
+                gap: 0 !important;
+            }
+            .works-grid .fan-card .project-thumb {
+                aspect-ratio: 16/10 !important;
+                margin-bottom: 4px !important;
+                border-radius: 8px !important;
+            }
+            .works-grid .fan-card .project-info { gap: 2px !important; }
+            .works-grid .fan-card .project-title-block { gap: 1px !important; }
+            .works-grid .fan-card .project-name {
+                font-size: 13px !important;
+                line-height: 1.3 !important;
+            }
+            .works-grid .fan-card .project-subtitle {
+                font-size: 12px !important;
+                line-height: 1.3 !important;
+            }
+            .works-grid .fan-card .project-meta {
+                gap: 4px !important;
+                padding-top: 4px !important;
+                margin-top: 4px !important;
+            }
+            .works-grid .fan-card .project-meta .meta-right { gap: 4px !important; }
+            .works-grid .fan-card .project-type {
+                font-size: 12px !important;
+                padding: 2px 6px !important;
+                border-radius: 4px !important;
+            }
+            .works-grid .fan-card .project-year { font-size: 12px !important; }
+            .works-grid .fan-card .project-arrow { font-size: 12px !important; }
+        }
+    </style>
+</head>
+<body class="detail-page">
+    <nav class="works-nav">
+        <a href="index.html" class="nav-logo">
+            <img src="jtlogo.svg" alt="Logo" class="nav-logo-icon" onerror="this.style.display='none'">
+            加糖<span class="dot">·</span>
+        </a>
+        <div class="nav-actions">
+            <a href="index.html#projects" class="nav-back">← 返回首页</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="切换深色模式" title="切换深色模式">
+                <svg class="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <section class="works-hero">
+        <h1>全部作品</h1>
+        <p class="sub">ALL PROJECTS</p>
+    </section>
+
+    <main class="works-grid" id="grid"><!-- JS renders here --></main>
+
+    <script>
+    /* 主题切换：与主页一致 */
+    (function () {
+        var STORAGE_KEY = 'jiatang_theme';
+        var toggle = document.getElementById('themeToggle');
+        if (!toggle) return;
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            toggle.title = theme === 'dark' ? '切换到浅色模式' : '切换到深色模式';
+        }
+
+        var saved = null;
+        try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var initialTheme = saved || (prefersDark ? 'dark' : 'light');
+        applyTheme(initialTheme);
+
+        toggle.addEventListener('click', function () {
+            var isDark = document.body.classList.contains('dark-mode');
+            var newTheme = isDark ? 'light' : 'dark';
+            applyTheme(newTheme);
+            try { localStorage.setItem(STORAGE_KEY, newTheme); } catch (e) {}
+        });
+
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+                try { if (!localStorage.getItem(STORAGE_KEY)) applyTheme(e.matches ? 'dark' : 'light'); } catch (err) {}
+            });
+        }
+    })();
+    </script>
+    <script src="works.js"></script>
+</body>
+</html>

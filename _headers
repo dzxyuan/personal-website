@@ -1,0 +1,8 @@
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Cache-Control: public, max-age=0, must-revalidate
+
+/projects
+  Cache-Control: no-store, no-cache, must-revalidate
+  Access-Control-Allow-Origin: *

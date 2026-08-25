@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品管理 — 加糖</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=202608253000">
+    <link rel="stylesheet" href="css/responsive.css?v=202608253000">
+</head>
+<body class="admin-page">
+    <div class="admin-wrap">
+        <header class="admin-header">
+            <h1>作品管理</h1>
+            <div class="admin-actions">
+                <a href="index.html" class="admin-btn">查看主页 ↗</a>
+                <button type="button" class="admin-btn" id="exportBtn">导出 JSON</button>
+                <button type="button" class="admin-btn" id="resetBtn">恢复默认</button>
+                <button type="button" class="admin-btn primary" id="newBtn">+ 新增项目</button>
+            </div>
+        </header>
+
+        <section class="admin-section">
+            <div class="admin-section-title">项目列表</div>
+            <ul class="admin-list" id="adminList"></ul>
+        </section>
+
+        <section class="admin-section admin-form-overlay" id="formSection" style="display:none;">
+            <div class="admin-section-title" id="formTitle">新增项目</div>
+            <div class="admin-loading-indicator" style="display:none;">
+                <div class="admin-loading-spinner"></div>
+                <div>加载中...</div>
+            </div>
+            <form class="admin-form" id="projectForm" autocomplete="off">
+                <input type="hidden" id="f_id">
+                <div class="admin-field-row">
+                    <div class="admin-field">
+                        <label for="f_name">列表名称</label>
+                        <input type="text" id="f_name" placeholder="显示在主页列表中的简短名称" required>
+                    </div>
+                    <div class="admin-field">
+                        <label for="f_type">项目类型</label>
+                        <input type="text" id="f_type" placeholder="如：设计项目 / Coding 项目">
+                    </div>
+                </div>
+                <div class="admin-field-row">
+                    <div class="admin-field">
+                        <label for="f_year">年份</label>
+                        <input type="text" id="f_year" placeholder="如：2025">
+                    </div>
+                    <div class="admin-field">
+                        <label for="f_date">时间</label>
+                        <input type="text" id="f_date" placeholder="如：2025年3月">
+                    </div>
+                </div>
+                <div class="admin-field">
+                    <label for="f_title">详情页标题</label>
+                    <input type="text" id="f_title" placeholder="详情页大标题（留空则使用列表名称）">
+                </div>
+                <div class="admin-field">
+                    <label for="f_subtitle">详情页副标题</label>
+                    <input type="text" id="f_subtitle" placeholder="一句话概括">
+                </div>
+                <div class="admin-field" style="display:flex;flex-direction:column;gap:0">
+                    <label for="f_thumb">封面图</label>
+                    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+                        <input type="text" id="f_thumb" placeholder="图片地址或上传本地图片" style="flex:1;min-width:200px">
+                        <label class="admin-upload-btn" for="f_thumb_file">📁 选择文件</label>
+                        <input type="file" id="f_thumb_file" accept="image/*" style="display:none">
+                    </div>
+                    <div class="admin-preview" id="f_thumb_preview" style="display:none"></div>
+                    <div class="admin-field-hint">支持本地上传（自动压缩后上传到 Cloudinary 云端）或填写图片 URL。</div>
+                </div>
+                <div class="admin-field">
+                    <label for="f_description">详情页文案</label>
+                    <textarea id="f_description" placeholder="项目介绍正文，空行分段。" rows="6"></textarea>
+                </div>
+                <div class="admin-field">
+                    <label for="f_images">详情页图片</label>
+                    <textarea id="f_images" placeholder="每行一个图片地址，支持本地上传"></textarea>
+                    <div class="admin-upload-row">
+                        <label class="admin-upload-btn" for="f_images_file">📁 上传本地图片</label>
+                        <input type="file" id="f_images_file" accept="image/*" multiple style="display:none">
+                        <span class="admin-field-hint">可多选，保持原图质量 · 展示时自动转换为 WebP（q=100 视觉无损）</span>
+                    </div>
+                    <div class="admin-preview-list" id="f_images_preview"></div>
+                </div>
+                <div class="admin-field">
+                    <div class="admin-toggle">
+                        <input type="checkbox" id="f_visible" checked>
+                        <label for="f_visible">在主页与详情页中显示此项目</label>
+                    </div>
+                </div>
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-btn" id="cancelBtn">取消</button>
+                    <button type="submit" class="admin-btn primary">保存项目</button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="admin-toast" id="toast"></div>
+
+    <script>
+        (function () {
+            var STORAGE_KEY = 'jiatang_projects_v1';
+            var API_URL = '/projects';
+            var DEFAULT_URL = 'projects.json';
+
+            var listEl = document.getElementById('adminList');
+            var formSection = document.getElementById('formSection');
+            var formTitle = document.getElementById('formTitle');
+            var form = document.getElementById('projectForm');
+            var toastEl = document.getElementById('toast');
+
+            var projects = [];
+            var editingId = null;
+
+            function showToast(msg) {
+                toastEl.textContent = msg;
+                toastEl.classList.add('show');
+                clearTimeout(showToast._t);
+                showToast._t = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
+            }
+
+            function genId() {
+                return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            }
+
+            function loadDefault(cb) {
+                fetch(DEFAULT_URL, { cache: 'no-store' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) { cb(data.projects || []); })
+                    .catch(function () { cb([]); });
+            }
+
+            function load(cb) {
+                try {
+                    var cached = localStorage.getItem(STORAGE_KEY);
+                    if (cached) {
+                        var data = JSON.parse(cached);
+                        if (Array.isArray(data)) { cb(data); return; }
+                    }
+                } catch (e) {}
+                loadDefault(function (def) {
+                    projects = def.slice();
+                    save();
+                    cb(projects);
+                });
+            }
+
+            var SAVE_MAX_SIZE = 5 * 1024 * 1024;
+            var CLOUDINARY_CLOUD = 'pvg0zowr';
+            var CLOUDINARY_PRESET = 'jiatang-upload';
+            var CLOUDINARY_KEY = '929731925814349';
+
+            function base64ToBlob(base64, mimeType) {
+                var byteChars = atob(base64);
+                var byteNumbers = new Array(byteChars.length);
+                for (var i = 0; i < byteChars.length; i++) {
+                    byteNumbers[i] = byteChars.charCodeAt(i);
+                }
+                var byteArray = new Uint8Array(byteNumbers);
+                return new Blob([byteArray], { type: mimeType });
+            }
+
+            function uploadToCloudinary(file, cb) {
+                var formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_PRESET);
+                formData.append('api_key', CLOUDINARY_KEY);
+                formData.append('folder', 'jiatang-projects');
+                // 覆盖预设的 transformation，保持原图像素不压缩
+                // 使用 f_webp:q_100 格式转换，不限制宽度
+                formData.append('transformation', 'f_webp,q_100');
+
+                fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/auto/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (res) {
+                        if (res.secure_url) {
+                            // 直接使用 secure_url，前端展示时用 f_webp,q_100 保证视觉无损
+                            cb(res.secure_url);
+                        } else {
+                            showToast('上传失败：' + (res.error && res.error.message ? res.error.message : '未知错误'));
+                            cb(null);
+                        }
+                    })
+                    .catch(function (err) {
+                        showToast('上传失败：' + (err.message || '网络错误'));
+                        cb(null);
+                    });
+            }
+
+            async function migrateBase64Images() {
+                var promises = [];
+                projects.forEach(function (p, pi) {
+                    // 迁移封面图
+                    if (p.thumb && p.thumb.indexOf('data:') === 0) {
+                        promises.push(new Promise(function (resolve) {
+                            var mimeMatch = p.thumb.match(/^data:(image\/\w+);base64,/);
+                            var mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+                            var blob = base64ToBlob(p.thumb.split(',')[1], mimeType);
+                            uploadToCloudinary(blob, function (url) {
+                                if (url) projects[pi].thumb = url;
+                                resolve();
+                            });
+                        }));
+                    }
+                    // 迁移详情页图片
+                    if (p.images) {
+                        p.images.forEach(function (img, ii) {
+                            if (img.indexOf('data:') === 0) {
+                                promises.push(new Promise(function (resolve) {
+                                    var mimeMatch = img.match(/^data:(image\/\w+);base64,/);
+                                    var mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+                                    var blob = base64ToBlob(img.split(',')[1], mimeType);
+                                    uploadToCloudinary(blob, function (url) {
+                                        if (url) projects[pi].images[ii] = url;
+                                        resolve();
+                                    });
+                                }));
+                            }
+                        });
+                    }
+                });
+                if (promises.length > 0) {
+                    showToast('正在将 ' + promises.length + ' 张图片迁移到云端...');
+                    await Promise.all(promises);
+                }
+                return promises.length;
+            }
+
+            async function save() {
+                var saveTime = Date.now();
+
+                // 自动迁移 base64 图片到 Cloudinary
+                var migratedCount = await migrateBase64Images();
+                if (migratedCount > 0) {
+                    showToast('✓ 已迁移 ' + migratedCount + ' 张图片到云端');
+                }
+
+                var dataStr = JSON.stringify(projects);
+
+                // 保存到本地
+                try {
+                    localStorage.setItem(STORAGE_KEY, dataStr);
+                    localStorage.setItem('jiatang_projects_version', String(projects.length));
+                    localStorage.setItem('jiatang_projects_saved_at', String(saveTime));
+                    localStorage.setItem('jiatang_projects_synced', 'pending');
+                } catch (e) {
+                    showToast('本地存储失败');
+                    return;
+                }
+
+                // 同步到服务器（数据很小，都是URL）
+                try {
+                    var controller = new AbortController();
+                    var timeoutId = setTimeout(function () { controller.abort(); }, 15000);
+
+                    var response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: dataStr,
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+                    var res = await response.json();
+
+                    if (res.kvBound === false) {
+                        showToast('⚠️ KV 未绑定，数据仅本地保存');
+                    } else if (res.success) {
+                        localStorage.setItem('jiatang_projects_synced', 'synced');
+                        showToast('✓ 已保存并同步（' + res.count + ' 个项目）');
+                    } else {
+                        showToast('保存失败：' + (res.error || '未知错误'));
+                    }
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        showToast('保存超时，仅本地保存');
+                    } else {
+                        showToast('网络错误，仅本地保存');
+                    }
+                }
+            }
+
+            function fileToBase64(file, cb) {
+                var reader = new FileReader();
+                reader.onload = function (e) { cb(e.target.result); };
+                reader.onerror = function () { showToast('图片读取失败'); cb(null); };
+                reader.readAsDataURL(file);
+            }
+
+            function compressImage(file, maxWidth, quality, cb) {
+                maxWidth = maxWidth || 1200;
+                quality = quality || 0.8;
+                
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = new Image();
+                    img.onload = function() {
+                        var canvas = document.createElement('canvas');
+                        var w = img.width;
+                        var h = img.height;
+                        
+                        // 如果图片尺寸小于最大宽度，不压缩
+                        if (w <= maxWidth && file.size <= 500 * 1024) {
+                            cb(e.target.result);
+                            return;
+                        }
+                        
+                        // 按比例缩放
+                        if (w > maxWidth) {
+                            h = h * (maxWidth / w);
+                            w = maxWidth;
+                        }
+                        
+                        canvas.width = w;
+                        canvas.height = h;
+                        var ctx = canvas.getContext('2d');
+                        
+                        // 绘制白色背景（处理透明PNG）
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, w, h);
+                        ctx.drawImage(img, 0, 0, w, h);
+                        
+                        var mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                        var result = canvas.toDataURL(mimeType, quality);
+                        cb(result);
+                    };
+                    img.onerror = function() {
+                        // 图片加载失败，返回原始数据
+                        cb(e.target.result);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() { 
+                    showToast('图片读取失败'); 
+                    cb(null); 
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function formatSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / 1048576).toFixed(1) + ' MB';
+            }
+
+            function makePreview(src, containerId, removeFn) {
+                var container = document.getElementById(containerId);
+                if (!src) { container.style.display = 'none'; container.innerHTML = ''; return; }
+                var isBase64 = src.indexOf('data:') === 0;
+                var sizeInfo = '';
+                if (isBase64) {
+                    var approxSize = Math.round((src.length - 'data:image/png;base64,'.length) * 3 / 4);
+                    sizeInfo = '<span class="admin-preview-size">📦 ' + formatSize(approxSize) + '</span>';
+                }
+                container.innerHTML =
+                    '<div class="admin-preview-item">' +
+                        '<img src="' + src + '" alt="预览">' +
+                        '<div class="admin-preview-info">' +
+                            '<span class="admin-preview-label">' + (isBase64 ? '本地上传' : '外链图片') + '</span>' +
+                            sizeInfo +
+                        '</div>' +
+                        (removeFn ? '<button type="button" class="admin-preview-remove">✕</button>' : '') +
+                    '</div>';
+                container.style.display = 'block';
+                if (removeFn) {
+                    container.querySelector('.admin-preview-remove').addEventListener('click', removeFn);
+                }
+            }
+
+            var thumbPreviewSrc = '';
+            var imagesPreviewSrcs = [];
+
+            function updateThumbPreview() {
+                var val = document.getElementById('f_thumb').value.trim();
+                thumbPreviewSrc = val;
+                makePreview(val, 'f_thumb_preview', function () {
+                    document.getElementById('f_thumb').value = '';
+                    thumbPreviewSrc = '';
+                    makePreview('', 'f_thumb_preview');
+                });
+            }
+
+            var dragSrcIdx = null;
+
+            function updateImagesPreview() {
+                var val = document.getElementById('f_images').value.trim();
+                var lines = val ? val.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean) : [];
+                var container = document.getElementById('f_images_preview');
+                if (!lines.length) { container.style.display = 'none'; container.innerHTML = ''; return; }
+
+                container.innerHTML = lines.map(function (src, i) {
+                    var isBase64 = src.indexOf('data:') === 0;
+                    var sizeInfo = '';
+                    if (isBase64) {
+                        var approxSize = Math.round((src.length - 'data:image/png;base64,'.length) * 3 / 4);
+                        sizeInfo = '<span class="admin-preview-size">📦 ' + formatSize(approxSize) + '</span>';
+                    }
+                    return '<div class="admin-preview-item" data-img-idx="' + i + '" draggable="true">' +
+                        '<div class="admin-preview-drag-handle" title="拖拽排序">⋮⋮</div>' +
+                        '<div class="admin-preview-placeholder">📷</div>' +
+                        '<button class="admin-preview-btn admin-btn-up" data-act="up" title="上移">↑</button>' +
+                        '<button class="admin-preview-btn admin-btn-down" data-act="down" title="下移">↓</button>' +
+                        '<button class="admin-preview-btn admin-btn-del" data-act="del" title="删除">✕</button>' +
+                        '<div class="admin-preview-info">' +
+                            '<span class="admin-preview-label">图' + (i + 1) + ' · ' + (isBase64 ? '本地' : '外链') + '</span>' +
+                            sizeInfo +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+                container.style.display = 'flex';
+
+                container.querySelectorAll('.admin-preview-item').forEach(function (item) {
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragover', handleDragOver);
+                    item.addEventListener('dragleave', handleDragLeave);
+                    item.addEventListener('drop', handleDrop);
+                    item.addEventListener('dragend', handleDragEnd);
+                    item.querySelectorAll('.admin-preview-btn').forEach(function(btn) {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            var idx = parseInt(item.getAttribute('data-img-idx'), 10);
+                            var act = btn.getAttribute('data-act');
+                            if (act === 'up') moveImageUp(idx);
+                            else if (act === 'down') moveImageDown(idx);
+                            else if (act === 'del') {
+                                if (confirm('删除图' + (idx+1) + '？')) removeImageAt(idx);
+                            }
+                        });
+                    });
+                });
+
+                var items = container.querySelectorAll('.admin-preview-item');
+                function loadNext(startIdx) {
+                    var batch = 2;
+                    for (var i = startIdx; i < Math.min(startIdx + batch, items.length); i++) {
+                        var item = items[i];
+                        var idx = parseInt(item.getAttribute('data-img-idx'), 10);
+                        var src = lines[idx];
+                        var placeholder = item.querySelector('.admin-preview-placeholder');
+                        if (placeholder && src) {
+                            var img = document.createElement('img');
+                            img.src = src;
+                            img.alt = '图片' + (idx + 1);
+                            img.loading = 'lazy';
+                            placeholder.replaceWith(img);
+                        }
+                    }
+                    if (startIdx + batch < items.length) {
+                        setTimeout(function() { loadNext(startIdx + batch); }, 50);
+                    }
+                }
+                loadNext(0);
+            }
+
+            function handleDragStart(e) {
+                dragSrcIdx = parseInt(this.getAttribute('data-img-idx'), 10);
+                this.classList.add('is-dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', String(dragSrcIdx));
+            }
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+            }
+            function handleDragLeave() {
+                this.classList.remove('drag-over');
+            }
+            function handleDrop(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                var targetIdx = parseInt(this.getAttribute('data-img-idx'), 10);
+                if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+
+                var val = document.getElementById('f_images').value.trim();
+                var lines = val ? val.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean) : [];
+                var item = lines.splice(dragSrcIdx, 1)[0];
+                lines.splice(targetIdx, 0, item);
+                document.getElementById('f_images').value = lines.join('\n');
+                dragSrcIdx = null;
+                updateImagesPreview();
+            }
+            function handleDragEnd() {
+                this.classList.remove('is-dragging');
+                document.querySelectorAll('.admin-preview-item.drag-over').forEach(function(el) {
+                    el.classList.remove('drag-over');
+                });
+                dragSrcIdx = null;
+            }
+
+            function moveImageUp(idx) {
+                if (idx <= 0) return;
+                var val = document.getElementById('f_images').value.trim();
+                var lines = val ? val.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean) : [];
+                var tmp = lines[idx];
+                lines[idx] = lines[idx - 1];
+                lines[idx - 1] = tmp;
+                document.getElementById('f_images').value = lines.join('\n');
+                updateImagesPreview();
+            }
+            function moveImageDown(idx) {
+                var val = document.getElementById('f_images').value.trim();
+                var lines = val ? val.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean) : [];
+                if (idx >= lines.length - 1) return;
+                var tmp = lines[idx];
+                lines[idx] = lines[idx + 1];
+                lines[idx + 1] = tmp;
+                document.getElementById('f_images').value = lines.join('\n');
+                updateImagesPreview();
+            }
+            function removeImageAt(idx) {
+                var val = document.getElementById('f_images').value.trim();
+                var lines = val ? val.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean) : [];
+                lines.splice(idx, 1);
+                document.getElementById('f_images').value = lines.join('\n');
+                updateImagesPreview();
+            }
+
+            document.getElementById('f_thumb_file').addEventListener('change', function (e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                if (file.size > 15 * 1048576) { showToast('图片超过 15MB 限制'); e.target.value = ''; return; }
+                showToast('正在处理封面图...');
+                compressImage(file, 1200, 0.92, function (b64) {
+                    if (!b64) { e.target.value = ''; return; }
+                    // 先用 base64 预览
+                    makePreview(b64, 'f_thumb_preview', function () {
+                        document.getElementById('f_thumb').value = '';
+                        thumbPreviewSrc = '';
+                        makePreview('', 'f_thumb_preview');
+                    });
+                    var mimeMatch = b64.match(/^data:(image\/\w+);base64,/);
+                    var mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+                    var blob = base64ToBlob(b64.split(',')[1], mimeType);
+                    showToast('正在上传封面图到云端...');
+                    uploadToCloudinary(blob, function (url) {
+                        if (url) {
+                            document.getElementById('f_thumb').value = url;
+                            thumbPreviewSrc = url;
+                            makePreview(url, 'f_thumb_preview', function () {
+                                document.getElementById('f_thumb').value = '';
+                                thumbPreviewSrc = '';
+                                makePreview('', 'f_thumb_preview');
+                            });
+                            showToast('✓ 封面图已上传');
+                        }
+                        e.target.value = '';
+                    });
+                });
+            });
+
+            document.getElementById('f_images_file').addEventListener('change', function (e) {
+                var files = Array.prototype.slice.call(e.target.files);
+                if (!files.length) return;
+                var remaining = files.length;
+                var uploadedUrls = [];
+                var failed = 0;
+
+                showToast('正在处理 ' + files.length + ' 张图片...');
+
+                files.forEach(function (file, idx) {
+                    if (file.size > 15 * 1048576) {
+                        showToast('「' + file.name + '」超过 15MB，已跳过');
+                        remaining--;
+                        failed++;
+                        if (remaining <= 0) finishBatchUpload(uploadedUrls, failed, files.length);
+                        return;
+                    }
+                    compressImage(file, 1920, 0.92, function (b64) {
+                        if (!b64) { remaining--; failed++; return; }
+                        var mimeMatch = b64.match(/^data:(image\/\w+);base64,/);
+                        var mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+                        var blob = base64ToBlob(b64.split(',')[1], mimeType);
+                        uploadToCloudinary(blob, function (url) {
+                            if (url) {
+                                uploadedUrls[idx] = url;
+                            } else {
+                                failed++;
+                            }
+                            remaining--;
+                            if (remaining <= 0) {
+                                finishBatchUpload(uploadedUrls, failed, files.length);
+                            } else {
+                                showToast('上传中... (' + (files.length - remaining) + '/' + files.length + ')');
+                            }
+                        });
+                    });
+                });
+
+                function finishBatchUpload(urls, failedCount, total) {
+                    var validUrls = urls.filter(Boolean);
+                    if (validUrls.length) {
+                        var currentVal = document.getElementById('f_images').value;
+                        var newVal = validUrls.join('\n');
+                        document.getElementById('f_images').value = currentVal ? currentVal + '\n' + newVal : newVal;
+                        updateImagesPreview();
+                    }
+                    if (failedCount > 0) {
+                        showToast('✓ 上传 ' + validUrls.length + ' 张成功，' + failedCount + ' 张失败');
+                    } else {
+                        showToast('✓ ' + validUrls.length + ' 张图片已上传到云端');
+                    }
+                    e.target.value = '';
+                }
+            });
+
+            document.getElementById('f_thumb').addEventListener('input', updateThumbPreview);
+            document.getElementById('f_images').addEventListener('input', updateImagesPreview);
+
+            function escapeHtml(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            function renderList() {
+                if (!projects.length) {
+                    listEl.innerHTML = '<div class="admin-empty">暂无项目，点击右上角「新增项目」开始添加。</div>';
+                    return;
+                }
+                listEl.innerHTML = projects.map(function (p, i) {
+                    var thumb = p.thumb
+                        ? '<img src="' + escapeHtml(p.thumb) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+                        : '';
+                    var meta = [p.type, p.year, p.date].filter(Boolean).map(escapeHtml).join(' · ');
+                    var visLabel = p.visible === false ? '已隐藏' : '已显示';
+                    return '' +
+                    '<li class="admin-item' + (p.visible === false ? ' hidden-item' : '') + '" data-id="' + escapeHtml(p.id) + '">' +
+                        '<div class="admin-item-thumb">' + thumb + '</div>' +
+                        '<div class="admin-item-info">' +
+                            '<div class="admin-item-name">' + escapeHtml(p.name || '未命名') + '</div>' +
+                            '<div class="admin-item-meta">' + (meta || '—') + ' · ' + visLabel + '</div>' +
+                        '</div>' +
+                        '<div class="admin-item-actions">' +
+                            '<button type="button" class="admin-btn sm" data-act="toggle">' + (p.visible === false ? '显示' : '隐藏') + '</button>' +
+                            '<a class="admin-btn sm" href="project.html?id=' + encodeURIComponent(p.id) + '" target="_blank">预览</a>' +
+                            '<button type="button" class="admin-btn sm" data-act="edit">编辑</button>' +
+                            '<button type="button" class="admin-btn sm danger" data-act="delete">删除</button>' +
+                        '</div>' +
+                    '</li>';
+                }).join('');
+            }
+
+            function resetForm() {
+                editingId = null;
+                form.reset();
+                document.getElementById('f_id').value = '';
+                document.getElementById('f_visible').checked = true;
+                formTitle.textContent = '新增项目';
+                thumbPreviewSrc = '';
+                imagesPreviewSrcs = [];
+                makePreview('', 'f_thumb_preview');
+                var imgContainer = document.getElementById('f_images_preview');
+                imgContainer.style.display = 'none';
+                imgContainer.innerHTML = '';
+            }
+
+            function openForm(p) {
+                editingId = p ? p.id : null;
+                formTitle.textContent = p ? '编辑项目' : '新增项目';
+
+                /* 先立即显示表单框架和加载动画 */
+                formSection.style.display = 'block';
+                var loadingEl = formSection.querySelector('.admin-loading-indicator');
+                loadingEl.style.display = 'flex';
+
+                requestAnimationFrame(function() {
+                    /* 第一帧：设置文本字段（快操作） */
+                    document.getElementById('f_id').value = p ? p.id : '';
+                    document.getElementById('f_name').value = p ? (p.name || '') : '';
+                    document.getElementById('f_type').value = p ? (p.type || '') : '';
+                    document.getElementById('f_year').value = p ? (p.year || '') : '';
+                    document.getElementById('f_date').value = p ? (p.date || '') : '';
+                    document.getElementById('f_title').value = p ? (p.title || '') : '';
+                    document.getElementById('f_subtitle').value = p ? (p.subtitle || '') : '';
+                    document.getElementById('f_description').value = p ? (p.description || '') : '';
+                    document.getElementById('f_visible').checked = p ? (p.visible !== false) : true;
+
+                    /* 第二帧：设置图片字段（不含渲染） */
+                    var imgs = p && Array.isArray(p.images) ? p.images.join('\n') : '';
+                    document.getElementById('f_images').value = imgs;
+                    document.getElementById('f_thumb').value = p ? (p.thumb || '') : '';
+
+                    thumbPreviewSrc = p ? (p.thumb || '') : '';
+
+                    /* 第三帧：异步渲染预览 */
+                    setTimeout(function() {
+                        if (thumbPreviewSrc) {
+                            makePreview(thumbPreviewSrc, 'f_thumb_preview', function () {
+                                document.getElementById('f_thumb').value = '';
+                                thumbPreviewSrc = '';
+                                makePreview('', 'f_thumb_preview');
+                            });
+                        }
+                        updateImagesPreview();
+                        loadingEl.style.display = 'none';
+                        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 30);
+                });
+            }
+
+            function collectForm() {
+                var name = document.getElementById('f_name').value.trim();
+                if (!name) { showToast('请填写列表名称'); return null; }
+                var imgsRaw = document.getElementById('f_images').value
+                    .split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+                return {
+                    id: editingId || genId(),
+                    name: name,
+                    type: document.getElementById('f_type').value.trim(),
+                    year: document.getElementById('f_year').value.trim(),
+                    date: document.getElementById('f_date').value.trim(),
+                    title: document.getElementById('f_title').value.trim(),
+                    subtitle: document.getElementById('f_subtitle').value.trim(),
+                    thumb: document.getElementById('f_thumb').value.trim(),
+                    description: document.getElementById('f_description').value,
+                    images: imgsRaw,
+                    visible: document.getElementById('f_visible').checked
+                };
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var data = collectForm();
+                if (!data) return;
+                if (editingId) {
+                    var idx = projects.findIndex(function (p) { return p.id === editingId; });
+                    if (idx > -1) { projects[idx] = data; }
+                } else {
+                    projects.push(data);
+                }
+                save();
+                renderList();
+                resetForm();
+                formSection.style.display = 'none';
+                showToast(editingId ? '已更新项目' : '已新增项目');
+            });
+
+            document.getElementById('newBtn').addEventListener('click', function () {
+                resetForm();
+                openForm(null);
+            });
+            document.getElementById('cancelBtn').addEventListener('click', function () {
+                resetForm();
+                formSection.style.display = 'none';
+            });
+            document.getElementById('resetBtn').addEventListener('click', function () {
+                if (!confirm('确定恢复为默认数据？当前所有改动将被清除。')) return;
+                loadDefault(function (def) {
+                    projects = def.slice();
+                    save();
+                    renderList();
+                    resetForm();
+                    formSection.style.display = 'none';
+                    showToast('已恢复默认数据');
+                });
+            });
+
+            document.getElementById('exportBtn').addEventListener('click', function () {
+                var data = { projects: projects };
+                var json = JSON.stringify(data, null, 2);
+                var blob = new Blob([json], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'projects.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('已导出 projects.json，替换文件后重新部署即可全站同步');
+            });
+
+            listEl.addEventListener('click', function (e) {
+                var btn = e.target.closest('button[data-act]');
+                if (!btn) return;
+                var li = btn.closest('.admin-item');
+                if (!li) return;
+                var id = li.getAttribute('data-id');
+                var p = projects.find(function (x) { return x.id === id; });
+                if (!p) return;
+                var act = btn.getAttribute('data-act');
+                if (act === 'toggle') {
+                    p.visible = p.visible === false ? true : false;
+                    save();
+                    renderList();
+                    showToast(p.visible ? '已显示「' + p.name + '」' : '已隐藏「' + p.name + '」');
+                } else if (act === 'edit') {
+                    openForm(p);
+                } else if (act === 'delete') {
+                    if (!confirm('确定删除「' + (p.name || '该项目') + '」？此操作不可撤销。')) return;
+                    projects = projects.filter(function (x) { return x.id !== id; });
+                    save();
+                    renderList();
+                    if (editingId === id) { resetForm(); formSection.style.display = 'none'; }
+                    showToast('已删除项目');
+                }
+            });
+
+            load(function (data) {
+                projects = data.slice();
+                renderList();
+            });
+        })();
+    </script>
+</body>
+</html>

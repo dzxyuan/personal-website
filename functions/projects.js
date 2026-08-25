@@ -1,7 +1,6 @@
 // Cloudflare Pages Function - Projects API
-// 使用 Cache API 做持久化存储（如果可用），回退到全局变量
+// 使用 KV 作为唯一数据源，Cache API 作为 KV 不可用时的回退
 
-const CACHE_KEY = 'projects-data-cache-v1';
 const DEFAULT_PROJECTS = {
   "projects": [
     {
@@ -59,9 +58,6 @@ const DEFAULT_PROJECTS = {
   ]
 };
 
-// 内存存储（同一会话内有效）
-let memoryCache = null;
-
 export async function onRequest(context) {
   const { request } = context;
   const method = request.method;
@@ -71,6 +67,7 @@ export async function onRequest(context) {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-store, max-age=0',
   };
 
   if (method === 'OPTIONS') {
@@ -79,52 +76,21 @@ export async function onRequest(context) {
 
   if (method === 'GET') {
     try {
-      // 1. 检查内存缓存（同一会话）
-      if (memoryCache) {
-        return new Response(JSON.stringify(memoryCache), { headers: corsHeaders });
+      // 直接从 KV 读取（cacheTtl=60 是 KV 最小值，无法更低）
+      const kvBound = !!(context.env && context.env.PROJECTS_KV);
+      if (kvBound) {
+        const raw = await context.env.PROJECTS_KV.get('projects_data', { cacheTtl: 60 });
+        if (raw) {
+          const data = JSON.parse(raw);
+          return new Response(JSON.stringify(data), { headers: corsHeaders });
+        }
       }
 
-      // 2. 尝试 Cache API
-      try {
-        const cache = caches.default;
-        const req = new Request('https://cache.local/' + CACHE_KEY);
-        const resp = await cache.match(req);
-        if (resp) {
-          const text = await resp.text();
-          if (text) {
-            const data = JSON.parse(text);
-            memoryCache = data;
-            return new Response(JSON.stringify(data), { headers: corsHeaders });
-          }
-        }
-      } catch (e) {
-        // Cache API 不可用，继续回退
-      }
-
-      // 3. 尝试 KV（如果绑定了）
-      try {
-        if (context.env && context.env.PROJECTS_KV) {
-          const raw = await context.env.PROJECTS_KV.get('projects_data');
-          if (raw) {
-            const data = JSON.parse(raw);
-            memoryCache = data;
-            // 写入 Cache API 供后续使用
-            try {
-              const cache = caches.default;
-              const req = new Request('https://cache.local/' + CACHE_KEY);
-              const cacheResp = new Response(JSON.stringify(data), {
-                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=31536000' },
-              });
-              await cache.put(req, cacheResp);
-            } catch (e2) {}
-            return new Response(JSON.stringify(data), { headers: corsHeaders });
-          }
-        }
-      } catch (e) {}
-
-      // 4. 返回默认数据
-      memoryCache = DEFAULT_PROJECTS;
-      return new Response(JSON.stringify(DEFAULT_PROJECTS), { headers: corsHeaders });
+      // KV 不可用或无数据，返回默认数据
+      return new Response(JSON.stringify({
+        projects: DEFAULT_PROJECTS.projects,
+        _debug: { kvBound: kvBound, source: 'default' }
+      }), { headers: corsHeaders });
     } catch (e) {
       return new Response(JSON.stringify(DEFAULT_PROJECTS), { headers: corsHeaders });
     }
@@ -135,31 +101,16 @@ export async function onRequest(context) {
       const body = await request.text();
       const data = JSON.parse(body);
 
-      // 1. 写入内存
-      memoryCache = data;
-
-      // 2. 尝试写入 Cache API
-      try {
-        const cache = caches.default;
-        const req = new Request('https://cache.local/' + CACHE_KEY);
-        const resp = new Response(JSON.stringify(data), {
-          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=31536000' },
-        });
-        await cache.put(req, resp);
-      } catch (e) {}
-
-      // 3. 尝试写入 KV
-      try {
-        if (context.env && context.env.PROJECTS_KV) {
-          await context.env.PROJECTS_KV.put('projects_data', JSON.stringify(data));
-        }
-      } catch (e) {}
+      // 写入 KV（全局一致）
+      const kvBound = !!(context.env && context.env.PROJECTS_KV);
+      if (kvBound) {
+        await context.env.PROJECTS_KV.put('projects_data', JSON.stringify(data));
+      }
 
       return new Response(JSON.stringify({
         success: true,
         count: (data.projects || []).length,
-        cache: memoryCache !== null,
-        memoryOnly: !(context.env && context.env.PROJECTS_KV)
+        kvBound: kvBound
       }), { headers: corsHeaders });
     } catch (e) {
       return new Response(JSON.stringify({ success: false, error: e.message }), {

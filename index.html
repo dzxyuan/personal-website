@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>加糖 — UI/UX 设计</title>
+    <link rel="icon" type="image/svg+xml" href="jtlogo.svg">
     <meta name="description" content="加糖，UI/UX 设计师。系统化思考，用心设计，以工艺与品味赋能数字产品。">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <link rel="preload" href="assets/3d/IP3d.glb" as="fetch" crossorigin>
-    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=202608253000">
+    <link rel="stylesheet" href="css/responsive.css?v=202608253000">
     <script type="importmap">
     {
         "imports": {
@@ -67,7 +68,7 @@
     <!-- 固定导航栏 -->
     <nav class="site-nav" id="siteNav">
         <div class="nav-inner">
-            <a href="#" class="nav-logo">加糖<span class="dot">·</span></a>
+            <a href="#" class="nav-logo"><img src="jtlogo.svg" alt="" class="nav-logo-icon" width="24" height="24">加糖<span class="dot">·</span></a>
             <ul class="nav-links">
                 <li><a href="#hero" class="nav-link">首页</a></li>
                 <li><a href="#character" class="nav-link">角色</a></li>
@@ -75,7 +76,13 @@
                 <li><a href="#projects" class="nav-link">作品</a></li>
                 <li><a href="#cta" class="nav-link">联系</a></li>
             </ul>
-            <a href="mailto:hello@jiatang.design" class="nav-cta">Get in touch ↗</a>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="切换深色模式" title="切换深色模式">
+                    <svg class="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+                <a href="mailto:hello@jiatang.design" class="nav-cta">Get in touch ↗</a>
+            </div>
         </div>
     </nav>
 
@@ -144,6 +151,8 @@
 
         <!-- ===== Section 2: Character 3D ===== -->
         <section class="panel panel-character" data-panel="character" id="character">
+            <!-- 点阵纹理层：宽网格，配合角色展示区 -->
+            <i class="dot-layer" aria-hidden="true"></i>
             <!-- 背景掉落素材层（装饰元素） -->
             <div class="falling-layer char-falling">
                 <div class="sticker c-s-1" data-depth="0.05"><div class="sticker-inner"><img src="assets/images/projects/downimg/s_02.png" alt="" loading="lazy"></div></div>
@@ -184,6 +193,8 @@
         <section class="panel panel-manifesto" data-panel="manifesto" id="manifesto">
             <div class="manifesto-bg"></div>
             <div class="manifesto-inner">
+                <!-- 点阵纹理层：细密网格，配合宣言文字 -->
+                <i class="dot-layer" aria-hidden="true"></i>
                 <h2 class="manifesto-title" data-reveal="word-by-word">
                     <span class="word">以</span>
                     <span class="word accent">工艺</span>
@@ -198,7 +209,11 @@
         <!-- ===== Section 4: Projects ===== -->
         <section class="panel panel-projects" data-panel="projects" id="projects">
             <div class="projects-inner">
+                <!-- 点阵纹理层：独立于内容层，径向透明只作用在这里，不会把边缘作品卡片裁掉 -->
+                <i class="dot-layer" aria-hidden="true"></i>
                 <h3 class="section-label mono" data-reveal="fade-up">精选作品 / Selected Work</h3>
+                <!-- 多项目模式：发牌式扇形展开舞台 -->
+                <div class="fan-stage" id="projectFanStage"></div>
                 <ul class="project-list" id="projectList"></ul>
             </div>
         </section>
@@ -208,6 +223,8 @@
             <!-- 2D 粒子物理交互 canvas -->
             <canvas class="particle-canvas" id="particleCanvas"></canvas>
             <div class="cta-inner">
+                <!-- 点阵纹理层：独立存在，不会裁切 CTA 标题/邮件 -->
+                <i class="dot-layer" aria-hidden="true"></i>
                 <p class="cta-small mono" data-reveal="fade-up">有目的的创新</p>
                 <h2 class="cta-title" data-reveal="word-by-word">
                     <span class="word">一起</span>
@@ -251,11 +268,70 @@
     <!-- /.liquid-distort -->
 
     <script>
-    /* 作品列表动态渲染：服务器 API 优先，回退 localStorage/projects.json */
+    /* 作品列表动态渲染：内联默认数据即时渲染 + API 后台同步 */
     (function () {
         var STORAGE_KEY = 'jiatang_projects_v1';
+        var VERSION_KEY = 'jiatang_projects_version';
         var API_URL = '/projects';
         var listEl = document.getElementById('projectList');
+
+        /* 内联默认数据（与 projects.json 保持一致），首屏零延迟 */
+        var INLINED_DEFAULT = {
+            "projects": [
+                {
+                    "id": "ds01",
+                    "name": "设计系统重构",
+                    "type": "设计项目",
+                    "year": "2025",
+                    "thumb": "assets/images/projects/fmimg/ds01.png",
+                    "visible": true,
+                    "title": "设计系统重构",
+                    "subtitle": "为下一代数字产品构建可扩展的设计语言",
+                    "date": "2025年3月",
+                    "description": "这是一个关于设计系统重构的项目案例。\n\n面对产品矩阵扩张带来的体验碎片化问题，我们重新梳理了底层设计语言，建立了一套基于 Token 的主题体系，覆盖颜色、间距、字号、动效等核心维度。\n\n通过组件库的标准化与文档化，设计与研发的协作效率提升了 40%，新功能上线的视觉一致性显著提高。",
+                    "images": ["assets/images/projects/fmimg/ds01.png"]
+                },
+                {
+                    "id": "inspire-mono",
+                    "name": "Inspire Mono",
+                    "type": "Coding 项目",
+                    "year": "2025",
+                    "thumb": "assets/images/projects/fmimg/inspire_mono_01.png",
+                    "visible": true,
+                    "title": "Inspire Mono",
+                    "subtitle": "面向设计师的灵感聚合与检索工具",
+                    "date": "2025年1月",
+                    "description": "Inspire Mono 是一款为设计师打造的本地化灵感检索工具。\n\n它支持从本地素材库中快速检索图片、配色与版式参考，并通过轻量的标签系统实现智能归类。所有数据均存储在本地，无需联网即可使用。\n\n项目采用纯前端方案实现，注重启动速度与交互流畅度，平均检索响应在 50ms 以内。",
+                    "images": ["assets/images/projects/fmimg/inspire_mono_01.png"]
+                },
+                {
+                    "id": "wasm-tool",
+                    "name": "WASM 设计工具",
+                    "type": "设计工具",
+                    "year": "2024",
+                    "thumb": "assets/images/projects/fmimg/wasm01.png",
+                    "visible": true,
+                    "title": "WASM 设计工具",
+                    "subtitle": "基于 WebAssembly 的高性能设计工具探索",
+                    "date": "2024年9月",
+                    "description": "这是一次基于 WebAssembly 探索浏览器端高性能设计工具的尝试。\n\n通过将核心计算逻辑用 Rust 编写并编译为 WASM，工具在处理大规模图形运算时仍能保持流畅的交互体验，突破了传统 Web 应用的性能瓶颈。\n\n项目同时探索了跨端共享渲染管线的可能性，为后续产品设计提供了技术储备。",
+                    "images": ["assets/images/projects/fmimg/wasm01.png"]
+                },
+                {
+                    "id": "wasm-flow",
+                    "name": "WASM Flow",
+                    "type": "设计项目",
+                    "year": "2024",
+                    "thumb": "assets/images/projects/fmimg/wasm02.png",
+                    "visible": true,
+                    "title": "WASM Flow",
+                    "subtitle": "面向动效编排的可视化工作流",
+                    "date": "2024年5月",
+                    "description": "WASM Flow 是一套面向动效设计师的可视化工作流系统。\n\n设计师可以通过节点连线的方式编排复杂的动效逻辑，实时预览效果并导出可复用的代码片段。系统底层借助 WASM 实现高性能运算，保证复杂场景下的编辑流畅度。\n\n该工具已在内部团队投入使用，显著降低了动效设计与开发之间的沟通成本。",
+                    "images": ["assets/images/projects/fmimg/wasm02.png"]
+                }
+            ]
+        };
 
         function escapeHtml(s) {
             return String(s == null ? '' : s)
@@ -263,16 +339,288 @@
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
+        /* 双阶段动画调度：单卡升起 → 发牌扇形展开（横向排布） */
+        var FAN_DEAL_MARK = 'jiatang_fan_deal';
+        function scheduleFanDeal(visible) {
+            var panel = document.getElementById('projects');
+            if (!panel) return;
+            if (visible.length <= 4) {
+                panel.classList.remove('fan-mode');
+                var stage = document.getElementById('projectFanStage');
+                if (stage) stage.innerHTML = '';
+                return;
+            }
+            panel.classList.add('fan-mode');
+            panel.classList.remove('fan-stage-1', 'fan-stage-2');
+
+            // 取前 6 张展示，保证协调
+            var stage = document.getElementById('projectFanStage');
+            var maxFan = Math.min(visible.length, 6);
+            var fanSet = visible.slice(0, maxFan);
+            if (!stage) return;
+
+            // 关键修正：让整套牌关于几何中心对称，避免单侧溢出。
+            var midIdx = (maxFan - 1) / 2;
+            var centerOrigIdx = Math.floor(midIdx);
+            stage.innerHTML = fanSet.map(function (p, origIdx) {
+                var idx = String(origIdx + 1).padStart(2, '0');
+                var fanI = origIdx - midIdx;
+                var deckStackIdx = (origIdx === centerOrigIdx)
+                    ? 0
+                    : Math.max(1, Math.round(Math.abs(fanI)));
+                var centerFlag = (origIdx === centerOrigIdx) ? '1' : '0';
+                var thumb = p.thumb
+                    ? '<img src="' + escapeHtml(p.thumb) + '" alt="' + escapeHtml(p.name || '') + '" onerror="this.parentElement.classList.add(\'thumb-placeholder\')">'
+                    : '';
+                var subtitle = p.subtitle
+                    ? '<span class="project-subtitle">' + escapeHtml(p.subtitle) + '</span>'
+                    : '';
+                return '' +
+                '<a href="project.html?id=' + encodeURIComponent(p.id) + '" class="project-link fan-card" ' +
+                    'data-fan-i="' + fanI + '" ' +
+                    'data-deck-idx="' + deckStackIdx + '" ' +
+                    'data-center="' + centerFlag + '" ' +
+                    'style="--fan-i:' + fanI + '; --fan-total:' + maxFan + '; --deck-idx:' + deckStackIdx + ';">' +
+                    '<div class="project-thumb">' + thumb +
+                        '<span class="thumb-fallback">' + idx + '</span>' +
+                    '</div>' +
+                    '<div class="project-info">' +
+                        '<div class="project-title-block">' +
+                            '<span class="project-name">' + escapeHtml(p.name || '未命名项目') + '</span>' +
+                            subtitle +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="project-meta">' +
+                        '<div class="meta-left">' +
+                            (p.type ? '<span class="project-type type-desktop">' + escapeHtml(p.type) + '</span>' : '') +
+                        '</div>' +
+                        '<div class="meta-right">' +
+                            (p.year ? '<span class="project-year mono">' + escapeHtml(p.year) + '</span>' : '') +
+                            '<span class="project-arrow">↗</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</a>';
+            }).join('');
+
+            // ===== 移动端：双列网格布局，跳过所有动画 =====
+            var isMobile = window.matchMedia('(max-width: 768px)').matches;
+            if (isMobile) {
+                // 移除所有 PC 端动画 class
+                panel.classList.remove('fan-mode', 'fan-stage-1', 'fan-stage-2', FAN_DEAL_MARK);
+                // 移动端：只显示前4张卡片 + "查看更多"按钮
+                var stage = document.getElementById('projectFanStage');
+                if (stage && !stage.querySelector('.mobile-view-more')) {
+                    var btn = document.createElement('a');
+                    btn.href = 'works.html';
+                    btn.className = 'mobile-view-more';
+                    btn.innerHTML = '<span>查看全部作品</span><span class="arrow">→</span>';
+                    stage.appendChild(btn);
+                }
+                return;
+            }
+
+            // ===== 桌面端：保持原有发牌动画 =====
+            function enter() {
+                var now = Date.now();
+                if (enter._last && now - enter._last < 1500) return;
+                enter._last = now;
+                panel.classList.remove(FAN_DEAL_MARK, 'fan-stage-1', 'fan-stage-2');
+                void panel.offsetWidth;
+                panel.classList.add(FAN_DEAL_MARK, 'fan-stage-1');
+                setTimeout(function () {
+                    panel.classList.remove('fan-stage-1');
+                    panel.classList.add('fan-stage-2');
+                }, 900);
+            }
+            window.replayFan = enter;
+
+            var container = document.getElementById('scrollContainer');
+            if (container) {
+                var rect = panel.getBoundingClientRect();
+                var cRect = container.getBoundingClientRect();
+                if (rect.top - cRect.top < container.clientHeight * 0.65) {
+                    enter();
+                }
+            }
+            try {
+                var fanIO = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) {
+                        if (e.isIntersecting) {
+                            enter();
+                            fanIO.disconnect();
+                        }
+                    });
+                }, { threshold: 0.22, root: container || null });
+                fanIO.observe(panel);
+            } catch (e) {
+                setTimeout(enter, 600);
+            }
+        }
+
+        /* ===== 移动端圆周旋转木马：沿圆弧轨道循环 + 手动拖拽 =====
+           原理：6 张卡片沿圆周分布在 140° 扇区，整体旋转时 card 跟随走圆弧
+                 超出扇区边界的卡片循环回另一端，实现无限循环流动
+        */
+        var fanSpinInstance = null;
+        function initFanSpin() {
+            if (fanSpinInstance) return;
+            var stage = document.getElementById('projectFanStage');
+            if (!stage) return;
+            var cards = stage.querySelectorAll('.fan-card');
+            if (cards.length === 0) return;
+            fanSpinInstance = true;
+
+            var N = cards.length;  // 6
+            var stageRot = 0;
+            var autoSpin = true;
+            var dragging = false;
+            var dragStartX = 0;
+            var rotStart = 0;
+            var resumeTimer = null;
+            var rafId = null;
+            var retryCount = 0;
+
+            function layout() {
+                var sw = stage.offsetWidth;
+                var sh = stage.offsetHeight;
+                if (sw < 10 || sh < 10) {
+                    retryCount++;
+                    if (retryCount < 30) setTimeout(layout, 80);
+                    return;
+                }
+                retryCount = 0;
+
+                var cx = sw / 2;
+                var cy = sh * 0.40;
+                var r = Math.min(sw * 0.44, sh * 0.38);
+                if (r < 60) r = 100;
+
+                for (var i = 0; i < N; i++) {
+                    var card = cards[i];
+                    // 6 卡均匀分布在 360° 圆周，60° 间隔
+                    // angle 归一化到 [-180, 180]，0° 为正下方
+                    var angle = -90 + i * 60 + stageRot;
+                    angle = ((angle % 360) + 540) % 360 - 180;
+
+                    var rad = angle * Math.PI / 180;
+                    var w = card.offsetWidth || 145;
+                    var h = card.offsetHeight || 258;
+
+                    // 位置：angle=0 为正下方，angle=-90 为正左方
+                    var x = cx + r * Math.sin(rad) - w / 2;
+                    var y = cy + r * Math.cos(rad) - h / 2;
+
+                    // 可见性：前半圆（-90° 到 +90°）显示
+                    // 边缘淡出：|angle| 60°-90° 渐隐
+                    var absAng = Math.abs(angle);
+                    var isVisible = absAng < 90;
+                    var opacity = 1;
+                    if (absAng > 60) {
+                        opacity = Math.max(0, 1 - (absAng - 60) / 30);
+                    }
+
+                    // z-index：右边（angle > 0）盖住左边（angle < 0）
+                    var depth = Math.round(100 + angle + 180);
+
+                    // 卡片始终直立
+                    card.style.setProperty('left', x + 'px', 'important');
+                    card.style.setProperty('top', y + 'px', 'important');
+                    card.style.setProperty('transform', 'rotate(0deg)', 'important');
+                    card.style.setProperty('transition', 'none', 'important');
+                    card.style.setProperty('z-index', depth, 'important');
+                    card.style.setProperty('opacity', opacity.toFixed(2), 'important');
+                    card.style.setProperty('visibility', isVisible ? 'visible' : 'hidden', 'important');
+                }
+            }
+
+            function loop() {
+                if (autoSpin && !dragging) {
+                    stageRot -= 0.15;
+                }
+                layout();
+                rafId = requestAnimationFrame(loop);
+            }
+
+            // 触摸拖拽
+            stage.addEventListener('touchstart', function (e) {
+                if (e.touches.length !== 1) return;
+                dragging = true;
+                autoSpin = false;
+                if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+                dragStartX = e.touches[0].clientX;
+                rotStart = stageRot;
+            }, { passive: true });
+
+            stage.addEventListener('touchmove', function (e) {
+                if (!dragging || e.touches.length !== 1) return;
+                var dx = e.touches[0].clientX - dragStartX;
+                var dy = e.touches[0].clientY - (e.touches[0].clientY);
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    e.preventDefault();
+                    stageRot = rotStart + dx * 0.8;
+                }
+            }, { passive: false });
+
+            stage.addEventListener('touchend', function () {
+                dragging = false;
+                resumeTimer = setTimeout(function () { autoSpin = true; }, 2500);
+            });
+
+            // 鼠标拖拽（桌面端模拟）
+            var mouseDown = false;
+            stage.addEventListener('mousedown', function (e) {
+                mouseDown = true;
+                autoSpin = false;
+                if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+                dragStartX = e.clientX;
+                rotStart = stageRot;
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function (e) {
+                if (!mouseDown) return;
+                stageRot = rotStart + (e.clientX - dragStartX) * 0.8;
+            });
+            document.addEventListener('mouseup', function () {
+                if (!mouseDown) return;
+                mouseDown = false;
+                resumeTimer = setTimeout(function () { autoSpin = true; }, 2500);
+            });
+
+            // 窗口 resize 时重新布局
+            window.addEventListener('resize', function () {
+                layout();
+            });
+
+            // 监听 panel 变为 active 时重新布局
+            var projectsPanel = projectsPanelRef;
+            if (projectsPanel) {
+                var activeObserver = new MutationObserver(function () {
+                    if (projectsPanel.classList.contains('is-active')) {
+                        setTimeout(function () { layout(); }, 300);
+                    }
+                });
+                activeObserver.observe(projectsPanel, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            // 立即启动，不管 panel 是否 active
+            layout();
+            loop();
+        }
+
         function render(projects, fromAsync) {
             var visible = (projects || []).filter(function (p) { return p.visible !== false; });
             if (!visible.length) {
-                listEl.innerHTML = '<li class="admin-empty" style="text-align:center;color:var(--text-tertiary);font-family:var(--font-mono);font-size:13px;padding:32px 0;">暂无作品，可在 admin.html 中添加。</li>';
+                listEl.innerHTML = '<li class="admin-empty" style="text-align:center;color:var(--text-tertiary);font-family:var(--font-mono);font-size:13px;padding:32px 0;">暂无作品</li>';
+                listEl.classList.remove('has-many');
                 return;
             }
             listEl.innerHTML = visible.map(function (p, i) {
                 var idx = String(i + 1).padStart(2, '0');
                 var thumb = p.thumb
                     ? '<img src="' + escapeHtml(p.thumb) + '" alt="' + escapeHtml(p.name || '') + '" onerror="this.parentElement.classList.add(\'thumb-placeholder\')">'
+                    : '';
+                var subtitle = p.subtitle
+                    ? '<span class="project-subtitle">' + escapeHtml(p.subtitle) + '</span>'
                     : '';
                 return '' +
                 '<li class="project-item" data-reveal="slide-up-stagger">' +
@@ -282,12 +630,20 @@
                         '</div>' +
                         '<div class="project-info">' +
                             '<span class="project-index mono">' + idx + '</span>' +
-                            '<span class="project-name">' + escapeHtml(p.name || '未命名项目') + '</span>' +
-                            (p.type ? '<span class="project-type">' + escapeHtml(p.type) + '</span>' : '') +
+                            '<div class="project-title-block">' +
+                                '<span class="project-name">' + escapeHtml(p.name || '未命名项目') + '</span>' +
+                                subtitle +
+                                (p.type ? '<span class="project-type type-mobile">' + escapeHtml(p.type) + '</span>' : '') +
+                            '</div>' +
                         '</div>' +
                         '<div class="project-meta">' +
-                            (p.year ? '<span class="project-year mono">' + escapeHtml(p.year) + '</span>' : '') +
-                            '<span class="project-arrow">↗</span>' +
+                            '<div class="meta-left">' +
+                                (p.type ? '<span class="project-type type-desktop">' + escapeHtml(p.type) + '</span>' : '') +
+                            '</div>' +
+                            '<div class="meta-right">' +
+                                (p.year ? '<span class="project-year mono">' + escapeHtml(p.year) + '</span>' : '') +
+                                '<span class="project-arrow">↗</span>' +
+                            '</div>' +
                         '</div>' +
                     '</a>' +
                 '</li>';
@@ -299,8 +655,12 @@
                 listEl.classList.remove('has-many');
             }
 
-            // 异步渲染时 main.js 的揭示逻辑已初始化，需手动触发可见
-            if (fromAsync) {
+            // 多项目时调度发牌动画；列表少时使用原有 reveal
+            if (visible.length > 4) {
+                scheduleFanDeal(visible);
+                // 移动端启动旋转木马
+                setTimeout(initFanSpin, 100);
+            } else if (fromAsync) {
                 var items = listEl.querySelectorAll('[data-reveal]');
                 Array.prototype.forEach.call(items, function (el, i) {
                     setTimeout(function () { el.classList.add('is-visible'); }, 100 + i * 60);
@@ -308,33 +668,67 @@
             }
         }
 
-        // 优先从服务器 API 读取（全站同步），回退到 localStorage / projects.json
-        fetch(API_URL, { cache: 'no-store' })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                var projects = data.projects || data;
-                if (Array.isArray(projects) && projects.length) {
-                    // 同步写入 localStorage，同浏览器更流畅
-                    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(projects)); } catch (e) {}
-                    render(projects, true);
-                } else {
-                    throw new Error('empty');
+        /* 第一步：先用内联默认数据即时渲染，确保首屏无延迟 */
+        render(INLINED_DEFAULT.projects, true);
+
+        /* 第二步：后台获取 localStorage 缓存（如果有更新的数据） */
+        try {
+            var cached = localStorage.getItem(STORAGE_KEY);
+            if (cached) {
+                var parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length) {
+                    render(parsed, true);
                 }
-            })
-            .catch(function () {
-                // 回退：localStorage
-                var cached = null;
-                try { cached = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
-                if (Array.isArray(cached) && cached.length) {
-                    render(cached, false);
-                } else {
-                    // 最后回退：projects.json
-                    fetch('projects.json', { cache: 'no-store' })
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) { render(data.projects || [], true); })
-                        .catch(function () { render([], true); });
-                }
-            });
+            }
+        } catch (e) {}
+
+        /* 第三步：从服务器 API 获取最新数据 */
+        var lastRenderedKey = '';
+        var pollTimer = null;
+        var pollCount = 0;
+
+        function fetchProjects() {
+            return fetch(API_URL + '?_t=' + Date.now(), { cache: 'no-store' })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var projects = data.projects || data;
+                    if (Array.isArray(projects) && projects.length) {
+                        var fingerprint = projects.map(function (p) {
+                            var imgCount = p.images ? p.images.length : 0;
+                            return p.id + ':' + (p.visible !== false ? '1' : '0') + ':' + imgCount;
+                        }).join('|');
+                        
+                        if (fingerprint !== lastRenderedKey) {
+                            lastRenderedKey = fingerprint;
+                            try {
+                                localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+                                localStorage.setItem('jiatang_projects_saved_at', String(Date.now()));
+                                localStorage.setItem('jiatang_projects_synced', 'synced');
+                            } catch (e) {}
+                            render(projects, true);
+                            stopPolling();
+                        }
+                    }
+                })
+                .catch(function () {});
+        }
+
+        function startPolling() {
+            stopPolling();
+            pollCount = 0;
+            pollTimer = setInterval(function () {
+                pollCount++;
+                if (pollCount >= 8) { stopPolling(); return; } // 最多轮询 8 次 × 8 秒 = 64 秒
+                fetchProjects();
+            }, 8000);
+        }
+
+        function stopPolling() {
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        }
+
+        // 初始获取 + 启动轮询（覆盖 KV 最多 60 秒的传播延迟）
+        fetchProjects().then(startPolling);
 
         // 后台保存后，同浏览器多标签页同步更新
         window.addEventListener('storage', function (e) {
@@ -345,9 +739,62 @@
                 } catch (err) {}
             }
         });
+
+        // bfcache 恢复时重新拉取 + 轮询
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) {
+                fetchProjects().then(startPolling);
+            }
+        });
+
+        // 页面从后台切回前台时重新拉取 + 轮询
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                fetchProjects().then(startPolling);
+            }
+        });
     })();
     </script>
-    <script src="js/main.js"></script>
-    <script type="module" src="js/character3d.js"></script>
+    <script>
+    /* 主题切换：深色/浅色模式 + localStorage 持久化 */
+    (function () {
+        var STORAGE_KEY = 'jiatang_theme';
+        var toggle = document.getElementById('themeToggle');
+        if (!toggle) return;
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            // 更新按钮 title
+            toggle.title = theme === 'dark' ? '切换到浅色模式' : '切换到深色模式';
+        }
+
+        // 初始化：优先 localStorage，其次系统偏好
+        var saved = null;
+        try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var initialTheme = saved || (prefersDark ? 'dark' : 'light');
+        applyTheme(initialTheme);
+
+        toggle.addEventListener('click', function () {
+            var isDark = document.body.classList.contains('dark-mode');
+            var newTheme = isDark ? 'light' : 'dark';
+            applyTheme(newTheme);
+            try { localStorage.setItem(STORAGE_KEY, newTheme); } catch (e) {}
+        });
+
+        // 监听系统主题变化（用户未手动设置时跟随）
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+                try { if (!localStorage.getItem(STORAGE_KEY)) applyTheme(e.matches ? 'dark' : 'light'); } catch (err) {}
+            });
+        }
+    })();
+    </script>
+    <script src="js/main.js?v=202608100400"></script>
+    <script type="module" src="js/character3d.js?v=202608070930"></script>
 </body>
 </html>

@@ -58,14 +58,115 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     // 鼠标跟随：仅左右转动
     let targetRotY = 0;
     let curRotY = 0;
+    let mouseOverModel = false;
 
+    // Raycaster 用于检测点击是否命中模型
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    // 检测点击是否命中 3D 模型
+    window.__checkChar3DHit = function(clientX, clientY) {
+        if (!modelRoot) return false;
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(modelRoot, true);
+        return intersects.length > 0;
+    };
+
+    // PC 端：鼠标移动跟随旋转（整个浏览器窗口） + 检测是否在模型上
     function onPointerMove(e) {
+        // 鼠标跟随：基于整个浏览器窗口的 X 坐标
+        const nx = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
+        targetRotY = nx * 0.45;
+
         const rect = container.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) return;
-        const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1; // -1..1
-        targetRotY = nx * 0.45;
+
+        // 检测鼠标是否在 canvas 区域内
+        const inCanvas = e.clientX >= rect.left && e.clientX <= rect.right &&
+                        e.clientY >= rect.top && e.clientY <= rect.bottom;
+
+        // 只有鼠标在 canvas 内才检测是否在模型上（用于显示/隐藏面板）
+        if (inCanvas && modelRoot) {
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(modelRoot, true);
+            const wasOver = mouseOverModel;
+            mouseOverModel = intersects.length > 0;
+
+            // 状态变化时通知外部
+            if (wasOver !== mouseOverModel) {
+                window.__char3DModelHover = mouseOverModel;
+                document.dispatchEvent(new CustomEvent('char3d-hover-change', {
+                    detail: { over: mouseOverModel }
+                }));
+            }
+        } else if (mouseOverModel) {
+            // 鼠标离开 canvas，重置悬停状态
+            mouseOverModel = false;
+            document.dispatchEvent(new CustomEvent('char3d-hover-change', {
+                detail: { over: false }
+            }));
+        }
     }
-    window.addEventListener('mousemove', onPointerMove, { passive: true });
+    // 使用捕获阶段确保能捕获所有鼠标移动事件
+    window.addEventListener('mousemove', onPointerMove, { passive: true, capture: true });
+
+    // 鼠标离开文档时重置
+    document.addEventListener('mouseleave', () => {
+        targetRotY = 0;
+        if (mouseOverModel) {
+            mouseOverModel = false;
+            document.dispatchEvent(new CustomEvent('char3d-hover-change', {
+                detail: { over: false }
+            }));
+        }
+    });
+
+    // 移动端：触摸滑动旋转（仅在 canvas 上）
+    let isTouching = false;
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+    let lastTouchMoved = false;
+
+    container.addEventListener('touchstart', (e) => {
+        isTouching = true;
+        lastTouchMoved = false;
+        if (e.touches.length === 1) {
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && isTouching) {
+            const touch = e.touches[0];
+            const dx = touch.clientX - lastTouchX;
+            const dy = touch.clientY - lastTouchY;
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                lastTouchMoved = true;
+                // 如果主要是水平滑动，阻止默认行为避免触发 click
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    e.preventDefault();
+                }
+            }
+            // 旋转模型（手指滑动带动画）
+            targetRotY += dx * 0.008;
+            // 限制范围
+            targetRotY = Math.max(-0.8, Math.min(0.8, targetRotY));
+            lastTouchX = touch.clientX;
+            lastTouchY = touch.clientY;
+        }
+    }, { passive: false });
+
+    container.addEventListener('touchend', () => {
+        isTouching = false;
+        // 将 lastTouchMoved 暴露给外部
+        window.__char3DTouchMoved = lastTouchMoved;
+    });
 
     // 尺寸适配
     function resize() {
@@ -161,7 +262,11 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     // 立即预加载模型（不等待面板可见）
     loadModel();
 
-    if (panel) {
+    // PC 端始终渲染动画，确保鼠标跟随生效
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (!isMobile) {
+        visible = true;
+    } else if (panel) {
         const io = new IntersectionObserver((entries) => {
             visible = entries[0].isIntersecting;
         }, { threshold: 0.02 });

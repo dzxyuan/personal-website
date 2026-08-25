@@ -9,10 +9,18 @@
     function initLoader() {
         const loader = document.getElementById('loader');
         if (!loader) return;
-        setTimeout(() => {
+        // 优先等待 DOMContentLoaded，最多等 1200ms
+        function hideLoader() {
             loader.classList.add('is-hidden');
             triggerAllInitial();
-        }, 2200);
+        }
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(hideLoader, 800);
+        } else {
+            document.addEventListener('DOMContentLoaded', () => setTimeout(hideLoader, 800));
+            // 兜底：最多等 1500ms
+            setTimeout(hideLoader, 1500);
+        }
     }
 
     /* ---------- 2. 首次揭示 ---------- */
@@ -117,10 +125,17 @@
             lastMoveTime = performance.now();
         });
 
+        function isDark() { return document.body.classList.contains('dark-mode'); }
+
         function splat(dyeArr, velArr, px, py, vx, vy, radius, dyeAmt, velAmt) {
             const gx = (px / window.innerWidth) * GW;
             const gy = (py / window.innerHeight) * GH;
             const gR = Math.ceil(radius);
+            const dark = isDark();
+            // 浅色：冷白雾；深色：荧光绿烟雾 (绿高、红蓝低)
+            const rRatio = dark ? 0.22 : 1.0;
+            const gRatio = dark ? 1.45 : 1.15;
+            const bRatio = dark ? 0.12 : 1.6;
             for (let y = -gR; y <= gR; y++) {
                 for (let x = -gR; x <= gR; x++) {
                     const ix = Math.floor(gx) + x;
@@ -132,9 +147,9 @@
                     const w = Math.exp(-dist2 / (r2 * 0.25));
                     const idx = (iy * GW + ix);
                     const di = idx * 3;
-                    dyeArr[di]     += dyeAmt * w;
-                    dyeArr[di + 1] += dyeAmt * w * 1.15;
-                    dyeArr[di + 2] += dyeAmt * w * 1.6;
+                    dyeArr[di]     += dyeAmt * w * rRatio;
+                    dyeArr[di + 1] += dyeAmt * w * gRatio;
+                    dyeArr[di + 2] += dyeAmt * w * bRatio;
                     const vi = idx * 2;
                     velArr[vi]     += vx * velAmt * w;
                     velArr[vi + 1] += vy * velAmt * w;
@@ -221,6 +236,7 @@
                 for (let c = 0; c < 2; c++) { vel[(y * GW + 0) * 2 + c] *= 0.3; vel[(y * GW + GW - 1) * 2 + c] *= 0.3; }
             }
 
+            const dark = isDark();
             for (let y = 0; y < GH; y++) {
                 for (let x = 0; x < GW; x++) {
                     const di = (y * GW + x) * 3;
@@ -229,13 +245,25 @@
                     let g = dye[di + 1];
                     let b = dye[di + 2];
                     r = Math.min(r, 1.5);
-                    g = Math.min(g, 1.5);
+                    g = Math.min(g, 1.8);
                     b = Math.min(b, 2.0);
-                    const cr = Math.min(255, 180 + r * 60);
-                    const cg = Math.min(255, 200 + g * 50);
-                    const cb = Math.min(255, 230 + b * 25);
-                    const intensity = Math.min(1, (r + g + b) * 0.5);
-                    const a = Math.round(intensity * 200);
+                    let cr, cg, cb, intensity, a;
+                    if (dark) {
+                        // 深色模式：荧光绿为主（#39ff14 ≈ 57,255,20）
+                        // 基底为透明 → 让烟雾直接呈现高饱和荧光绿
+                        cr = Math.min(255, 57 + r * 110);
+                        cg = Math.min(255, 210 + g * 75);
+                        cb = Math.min(255, 20 + b * 80);
+                        intensity = Math.min(1, (r * 0.4 + g * 1.0 + b * 0.3) * 0.6);
+                        a = Math.round(intensity * 230);
+                    } else {
+                        // 浅色模式：冷白雾（原配方，保留）
+                        cr = Math.min(255, 180 + r * 60);
+                        cg = Math.min(255, 200 + g * 50);
+                        cb = Math.min(255, 230 + b * 25);
+                        intensity = Math.min(1, (r + g + b) * 0.5);
+                        a = Math.round(intensity * 200);
+                    }
                     pixels[pi]     = cr;
                     pixels[pi + 1] = cg;
                     pixels[pi + 2] = cb;
@@ -714,6 +742,8 @@
                 const targetScroll = idx * getPanelHeight();
                 container.scrollTo({ top: targetScroll, behavior: 'smooth' });
 
+                replayFanIfProjects(idx);
+
                 setTimeout(() => {
                     panels.forEach(p => { p.classList.remove('is-entering', 'is-leaving'); });
                 }, 800);
@@ -728,20 +758,15 @@
         }
 
         function getMidDelay() {
-            const type = getTransitionType(activeIdx, null);
-            return type === 'liquid' ? 200 : type === 'blinds' ? 200 : 350;
+            return 350;
         }
 
         function getTotalTime() {
-            const type = getTransitionType(activeIdx, null);
-            return type === 'liquid' ? 520 : type === 'blinds' ? 520 : 850;
+            return 850;
         }
 
         function getTransitionType(currentIdx, dir) {
-            const nextIdx = dir === 'down' ? currentIdx + 1 : dir === 'up' ? currentIdx - 1 : currentIdx + 1;
-            const pair = [currentIdx, nextIdx].sort((a, b) => a - b).join('-');
-            if (pair === '0-1') return 'liquid';
-            if (pair === '1-2') return 'blinds';
+            // 所有切换都使用 stripes 效果
             return 'stripes';
         }
 
@@ -911,27 +936,74 @@
                 document.querySelectorAll('.mobile-nav-link').forEach((link, i) => {
                     link.classList.toggle('is-active', i === activeIdx);
                 });
+                replayFanIfProjects(idx);
             }
         });
 
-        // 卡片显示：鼠标进入character stage时显示卡片（含卡片本身hover）
+        // 每次切到作品模块都重放发牌动画（在 panel 切换时直接调用，不用 Observer 避免循环）
+        function replayFanIfProjects(idx) {
+            var target = panels[idx];
+            if (target && target.id === 'projects' && typeof window.replayFan === 'function') {
+                // 延迟到 is-active 生效、过渡完成后调用
+                setTimeout(function () {
+                    try { window.replayFan(); } catch (e) {}
+                }, 600);
+            }
+        }
+
+        // 卡片显示：只有命中3D模型本体才触发
         const charStage = document.getElementById('charStage');
         const charCard = document.getElementById('charCard');
-        if (charStage && charCard) {
-            let insideStage = false;
-            let insideCard = false;
-            const showCard = () => charCard.classList.add('is-visible');
-            const hideCard = () => {
-                if (!insideStage && !insideCard) {
-                    charCard.classList.remove('is-visible');
-                }
-            };
-            charStage.addEventListener('mouseenter', () => { insideStage = true; showCard(); });
-            charStage.addEventListener('mouseleave', () => { insideStage = false; hideCard(); });
-            charCard.addEventListener('mouseenter', () => { insideCard = true; });
-            charCard.addEventListener('mouseleave', () => { insideCard = false; hideCard(); });
-            // 移动端：触摸时显示卡片
-            charStage.addEventListener('touchstart', () => { showCard(); }, { passive: true });
+        const char3DCanvas = document.getElementById('char3DCanvas');
+        if (charStage && charCard && char3DCanvas) {
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+            if (isMobile) {
+                // 移动端：只有点击canvas且命中模型才切换
+                char3DCanvas.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // 如果刚滑动过，不触发点击（双重检查）
+                    if (window.__char3DTouchMoved) {
+                        window.__char3DTouchMoved = false;
+                        return;
+                    }
+                    // 使用 Raycaster 检测是否点中了模型
+                    const hit = window.__checkChar3DHit ? window.__checkChar3DHit(e.clientX, e.clientY) : false;
+                    if (hit) {
+                        charCard.classList.toggle('is-visible');
+                    }
+                }, { passive: true });
+                // 点击卡片内部不关闭
+                charCard.addEventListener('click', (e) => { e.stopPropagation(); });
+                // 点击卡片外部关闭
+                document.addEventListener('click', (e) => {
+                    if (!charCard.contains(e.target)) {
+                        charCard.classList.remove('is-visible');
+                    }
+                });
+            } else {
+                // 桌面端：鼠标悬停在canvas上且命中模型才显示
+                let insideCard = false;
+                let overModel = false;
+                const showCard = () => charCard.classList.add('is-visible');
+                const hideCard = () => {
+                    if (!insideCard && !overModel) {
+                        charCard.classList.remove('is-visible');
+                    }
+                };
+                // 监听模型悬停事件
+                document.addEventListener('char3d-hover-change', (e) => {
+                    overModel = e.detail.over;
+                    if (overModel) {
+                        showCard();
+                    } else if (!insideCard) {
+                        hideCard();
+                    }
+                });
+                // 卡片交互
+                charCard.addEventListener('mouseenter', () => { insideCard = true; showCard(); });
+                charCard.addEventListener('mouseleave', () => { insideCard = false; hideCard(); });
+            }
         }
 
         // 初始化
@@ -953,6 +1025,7 @@
         let mouse = { x: -9999, y: -9999, px: -9999, py: -9999, vx: 0, vy: 0, active: false };
         let rafId = null;
 
+        // CTA 碰撞粒子保留原始中性配色（用户要求的是鼠标移动液态粒子，改在 smokeCanvas 中）
         const COLORS = [
             '#1a1a1a', '#1a1a1a', '#1a1a1a', '#1a1a1a',
             '#2d2d2d', '#2d2d2d', '#3a3a3a', '#3a3a3a',
@@ -985,8 +1058,8 @@
         function createParticles() {
             particles = [];
             const isMobile = window.innerWidth < 768;
-            const maxCount = isMobile ? 35 : 65;
-            const density = isMobile ? 25000 : 18000;
+            const maxCount = isMobile ? 35 : 33;
+            const density = isMobile ? 25000 : 36000;
             const count = Math.min(maxCount, Math.floor((W * H) / density));
             for (let i = 0; i < count; i++) {
                 const size = isMobile ? 10 + Math.random() * 5 : 16 + Math.random() * 6;
@@ -1090,8 +1163,9 @@
         }
 
         function update() {
-            // 半透明覆盖实现拖尾
-            ctx.fillStyle = 'rgba(250, 250, 248, 0.25)';
+            // 半透明覆盖实现拖尾——深色模式用暗色，浅色模式用亮色
+            const isDark = document.body.classList.contains('dark-mode');
+            ctx.fillStyle = isDark ? 'rgba(10, 14, 18, 0.22)' : 'rgba(250, 250, 248, 0.25)';
             ctx.fillRect(0, 0, W, H);
 
             // 鼠标作为物理碰撞体：核心碰撞半径 + 外围软推力

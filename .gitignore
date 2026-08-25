@@ -5,3 +5,10 @@ node_modules/
 .env
 __pycache__/
 *.pyc
+
+# 本地工具/缓存目录
+.tmp/
+.wrangler-config/
+.xdg/
+.vercel/
+.netlify/
