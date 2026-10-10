@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=202610100005">
-    <link rel="stylesheet" href="css/responsive.css?v=202610100005">
+    <link rel="stylesheet" href="css/style.css?v=202610100006">
+    <link rel="stylesheet" href="css/responsive.css?v=202610100006">
     <script type="importmap">
     {
         "imports": {
@@ -869,29 +869,29 @@
         <div class="contact-modal-card" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
             <button type="button" class="contact-modal-close" id="contactModalClose" aria-label="关闭联系方式">×</button>
             <div class="contact-modal-head">
-                <p class="contact-modal-kicker mono"><span>CONTACT</span></p>
-                <h3 class="contact-modal-title" id="contactModalTitle">联系方式</h3>
+                <h3 class="contact-modal-title" id="contactModalTitle">
+                    <span class="contact-modal-title-cn">联系方式</span>
+                    <span class="contact-modal-title-en mono">CONTACT</span>
+                </h3>
             </div>
             <div class="contact-items">
-                <div class="contact-item">
-                    <div class="contact-label">
-                        <span class="contact-label-en mono">PHONE</span>
-                        <span class="contact-label-cn">电话</span>
-                    </div>
-                    <button type="button" class="contact-value" data-copy="15116077295">15116077295</button>
-                    <span class="contact-copied" aria-live="polite">已复制</span>
-                </div>
-                <div class="contact-item">
-                    <div class="contact-label">
-                        <span class="contact-label-en mono">EMAIL</span>
-                        <span class="contact-label-cn">QQ邮箱</span>
-                    </div>
-                    <button type="button" class="contact-value" data-copy="937222819@qq.com">937222819@qq.com</button>
-                    <span class="contact-copied" aria-live="polite">已复制</span>
-                </div>
+                <button type="button" class="contact-item" data-copy="15116077295">
+                    <span class="contact-item-top">
+                        <span class="contact-item-label"><b class="mono">PHONE</b><i>电话</i></span>
+                        <span class="contact-copied" aria-live="polite">已复制</span>
+                    </span>
+                    <span class="contact-item-value mono">15116077295</span>
+                </button>
+                <button type="button" class="contact-item" data-copy="937222819@qq.com">
+                    <span class="contact-item-top">
+                        <span class="contact-item-label"><b class="mono">EMAIL</b><i>QQ 邮箱</i></span>
+                        <span class="contact-copied" aria-live="polite">已复制</span>
+                    </span>
+                    <span class="contact-item-value mono">937222819@qq.com</span>
+                </button>
             </div>
             <div class="contact-modal-foot">
-                <p class="contact-hint mono">点击号码或邮箱即可复制 · CLICK TO COPY</p>
+                <p class="contact-hint">点击号码或邮箱即可复制</p>
             </div>
         </div>
     </div>
@@ -945,9 +945,9 @@
             return ok;
         }
 
-        modal.querySelectorAll('.contact-value').forEach(function (btn) {
+        modal.querySelectorAll('.contact-item[data-copy]').forEach(function (btn) {
             btn.addEventListener('click', function () {
-                var item = btn.closest('.contact-item');
+                var item = btn;
                 var text = btn.getAttribute('data-copy');
                 var ok = doCopy(text);
                 if (!ok && navigator.clipboard && window.isSecureContext) {

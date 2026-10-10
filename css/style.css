@@ -2699,13 +2699,13 @@ button.cta-email {
 }
 .contact-modal-card {
     position: relative;
-    width: min(446px, calc(100vw - 40px));
-    background: linear-gradient(180deg, #ffffff 0%, #f5f5f0 100%);
-    border: 1px solid rgba(12, 12, 12, 0.08);
-    border-radius: 24px;
+    width: min(420px, calc(100vw - 40px));
+    background: linear-gradient(180deg, #fdfdfb 0%, #f4f4ef 100%);
+    border: 1px solid rgba(12, 12, 12, 0.07);
+    border-radius: 22px;
     overflow: hidden;
     box-shadow:
-        0 48px 100px -28px rgba(15, 20, 12, 0.38),
+        0 48px 100px -28px rgba(15, 20, 12, 0.34),
         inset 0 1px 0 rgba(255, 255, 255, 0.9);
     transform: translateY(20px) scale(0.95);
     transition: transform 0.38s var(--ease-out);
@@ -2713,67 +2713,59 @@ button.cta-email {
 .contact-modal.is-open .contact-modal-card {
     transform: translateY(0) scale(1);
 }
-/* 顶部荧光绿高光描线 */
+/* 左上角一截荧光短条，克制地点题 */
 .contact-modal-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
+    top: 0; left: 28px;
+    width: 34px;
     height: 3px;
-    background: linear-gradient(90deg,
-        transparent 0%, var(--accent) 30%, var(--accent) 70%, transparent 100%);
-    opacity: 0.85;
+    border-radius: 0 0 3px 3px;
+    background: var(--accent);
+    opacity: 0.9;
     z-index: 2;
 }
 
-/* 头部：小标 + 大标题拉开层级 */
+/* 头部：中文主标题 + 英文小标同一行基线对齐 */
 .contact-modal-head {
-    padding: 32px 30px 20px;
-}
-.contact-modal-kicker {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    margin: 0 40px 0 0;
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--text-tertiary);
-}
-.contact-modal-kicker span::before {
-    content: '';
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    margin-right: 9px;
-    border-radius: 50%;
-    background: var(--accent);
-    vertical-align: 1px;
-    box-shadow: 0 0 0 4px var(--accent-dim);
+    padding: 34px 28px 22px;
 }
 .contact-modal-title {
-    margin: 12px 0 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0 40px 0 0;
+}
+.contact-modal-title-cn {
     font-family: var(--font-heading);
-    font-size: 27px;
+    font-size: 22px;
     font-weight: 700;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.04em;
     color: var(--text-primary);
+}
+.contact-modal-title-en {
+    font-size: 9.5px;
+    font-weight: 400;
+    letter-spacing: 0.34em;
+    color: var(--text-tertiary);
 }
 
 .contact-modal-close {
     position: absolute;
-    top: 18px;
-    right: 18px;
+    top: 16px;
+    right: 16px;
     z-index: 3;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid transparent;
     border-radius: 50%;
     background: transparent;
-    font-size: 21px;
+    font-size: 20px;
     line-height: 1;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
     transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 .contact-modal-close:hover {
@@ -2782,69 +2774,74 @@ button.cta-email {
     color: var(--text-primary);
 }
 
-/* 联系条目 */
+/* 联系条目：独立小卡片，去分割线 */
 .contact-items {
-    margin: 0 22px;
-    border-top: 1px solid var(--border);
-}
-.contact-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 17px 8px;
-}
-.contact-item + .contact-item {
-    border-top: 1px solid var(--border);
-}
-.contact-label {
-    flex: 0 0 72px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 10px;
+    padding: 0 22px;
 }
-.contact-label-en {
-    font-size: 10px;
-    letter-spacing: 0.22em;
-    color: var(--text-tertiary);
-}
-.contact-label-cn {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-.contact-value {
+.contact-item {
     appearance: none;
     -webkit-appearance: none;
-    flex: 1 1 auto;
-    min-width: 0;
-    padding: 10px 12px;
-    margin-left: -12px;
-    border: none;
-    border-radius: 12px;
-    background: transparent;
-    font-family: var(--font-mono);
-    font-size: 18.5px;
-    font-weight: 500;
-    letter-spacing: 0.01em;
+    display: block;
+    width: 100%;
+    font-family: inherit;
     text-align: left;
-    color: var(--text-primary);
+    padding: 14px 18px 15px;
+    border: 1px solid rgba(12, 12, 12, 0.06);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.66);
     cursor: pointer;
-    transition: background 0.22s, color 0.22s;
+    transition: border-color 0.22s, background 0.22s, transform 0.22s var(--ease-out);
 }
-.contact-value:hover {
-    background: rgba(176, 224, 46, 0.16);
-    color: #5d7c10;
+.contact-item:hover {
+    border-color: rgba(176, 224, 46, 0.55);
+    background: rgba(176, 224, 46, 0.1);
+    transform: translateY(-1px);
+}
+.contact-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.contact-item-label {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.contact-item-label b {
+    font-size: 9.5px;
+    font-weight: 400;
+    letter-spacing: 0.24em;
+    color: var(--text-tertiary);
+}
+.contact-item-label i {
+    font-style: normal;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.contact-item-value {
+    display: block;
+    margin-top: 9px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+    word-break: break-all;
 }
 .contact-copied {
     flex: 0 0 auto;
-    padding: 5px 12px;
+    padding: 4px 11px;
     border-radius: 999px;
-    background: rgba(176, 224, 46, 0.18);
+    background: rgba(176, 224, 46, 0.22);
     color: #5d7c10;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     opacity: 0;
-    transform: translateX(-6px) scale(0.92);
-    transition: opacity 0.22s, transform 0.22s var(--ease-out);
+    transform: translateX(-4px) scale(0.9);
+    transition: opacity 0.2s, transform 0.2s var(--ease-out);
     pointer-events: none;
 }
 .contact-item.is-copied .contact-copied {
@@ -2853,28 +2850,32 @@ button.cta-email {
 }
 
 .contact-modal-foot {
-    padding: 14px 30px 26px;
+    padding: 18px 28px 24px;
 }
 .contact-hint {
-    font-size: 10.5px;
-    letter-spacing: 0.1em;
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
     color: var(--text-tertiary);
 }
 
-/* 深色模式：深灰墨绿卡片底 + 荧光绿交互色 */
+/* 深色模式：深墨卡片底 + 荧光绿交互色 */
 body.dark-mode .contact-modal-card {
-    background: linear-gradient(180deg, #1b1d18 0%, #111310 100%);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, #1a1c17 0%, #10120e 100%);
+    border-color: rgba(255, 255, 255, 0.09);
     box-shadow:
         0 48px 110px -24px rgba(0, 0, 0, 0.85),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
-body.dark-mode .contact-value:hover {
-    background: rgba(57, 255, 20, 0.12);
-    color: var(--accent);
+body.dark-mode .contact-item {
+    background: rgba(255, 255, 255, 0.045);
+    border-color: rgba(255, 255, 255, 0.07);
+}
+body.dark-mode .contact-item:hover {
+    border-color: rgba(57, 255, 20, 0.4);
+    background: rgba(57, 255, 20, 0.08);
 }
 body.dark-mode .contact-copied {
-    background: rgba(57, 255, 20, 0.14);
+    background: rgba(57, 255, 20, 0.16);
     color: var(--accent);
 }
 
