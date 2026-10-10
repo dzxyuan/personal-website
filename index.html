@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=202610100004">
-    <link rel="stylesheet" href="css/responsive.css?v=202610100004">
+    <link rel="stylesheet" href="css/style.css?v=202610100005">
+    <link rel="stylesheet" href="css/responsive.css?v=202610100005">
     <script type="importmap">
     {
         "imports": {
@@ -243,7 +243,7 @@
                     <span class="word">创造</span>
                     <span class="word accent">不凡之作</span>
                 </h2>
-                <button type="button" class="cta-email" id="ctaContactBtn" data-reveal="fade-up">联系我 · Contact ↗</button>
+                <button type="button" class="cta-email" id="ctaContactBtn" data-reveal="fade-up">联系我 · Contact<span class="cta-email-arrow">↗</span></button>
             </div>
         </section>
 
@@ -868,18 +868,31 @@
         <div class="contact-modal-mask" id="contactModalMask"></div>
         <div class="contact-modal-card" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
             <button type="button" class="contact-modal-close" id="contactModalClose" aria-label="关闭联系方式">×</button>
-            <p class="contact-modal-title mono" id="contactModalTitle">联系方式 / Contact</p>
-            <div class="contact-item">
-                <span class="contact-label mono">电话</span>
-                <button type="button" class="contact-value" data-copy="15116077295">15116077295</button>
-                <span class="contact-copied" aria-live="polite">已复制</span>
+            <div class="contact-modal-head">
+                <p class="contact-modal-kicker mono"><span>CONTACT</span></p>
+                <h3 class="contact-modal-title" id="contactModalTitle">联系方式</h3>
             </div>
-            <div class="contact-item">
-                <span class="contact-label mono">QQ邮箱</span>
-                <button type="button" class="contact-value" data-copy="937222819@qq.com">937222819@qq.com</button>
-                <span class="contact-copied" aria-live="polite">已复制</span>
+            <div class="contact-items">
+                <div class="contact-item">
+                    <div class="contact-label">
+                        <span class="contact-label-en mono">PHONE</span>
+                        <span class="contact-label-cn">电话</span>
+                    </div>
+                    <button type="button" class="contact-value" data-copy="15116077295">15116077295</button>
+                    <span class="contact-copied" aria-live="polite">已复制</span>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-label">
+                        <span class="contact-label-en mono">EMAIL</span>
+                        <span class="contact-label-cn">QQ邮箱</span>
+                    </div>
+                    <button type="button" class="contact-value" data-copy="937222819@qq.com">937222819@qq.com</button>
+                    <span class="contact-copied" aria-live="polite">已复制</span>
+                </div>
             </div>
-            <p class="contact-hint mono">点击号码或邮箱即可复制</p>
+            <div class="contact-modal-foot">
+                <p class="contact-hint mono">点击号码或邮箱即可复制 · CLICK TO COPY</p>
+            </div>
         </div>
     </div>
 

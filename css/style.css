@@ -213,7 +213,7 @@ body.liquid-bg-ready .fluid-meta { display: none; }
     position: fixed;
     top: 0; left: 0;
     width: 10px; height: 10px;
-    z-index: 9999;
+    z-index: 10020;            /* 高于联系弹层(10000)，始终可见 */
     pointer-events: none;
     transform: translate(-5px, -5px);
     transition: width 0.25s var(--ease-out), height 0.25s var(--ease-out), opacity 0.2s;
@@ -1590,13 +1590,39 @@ body.dark-mode .fan-arrow:hover:not(:disabled) {
 
 .cta-email {
     font-family: var(--font-heading);
-    font-size: 20px; font-weight: 500;
-    border-bottom: 2px solid var(--text-primary);
-    padding-bottom: 4px;
-    transition: color 0.3s, border-color 0.3s;
-    display: inline-block;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 32px;
+    margin-top: 40px;
+    border: 1px solid var(--text-primary);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-primary);
+    transition: background 0.3s var(--ease-out), color 0.3s,
+        border-color 0.3s, transform 0.3s var(--ease-out),
+        box-shadow 0.3s var(--ease-out);
 }
-.cta-email:hover { color: var(--accent); border-color: var(--accent); }
+.cta-email:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0c0c0c;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px -12px rgba(176, 224, 46, 0.55);
+}
+.cta-email-arrow {
+    display: inline-block;
+    font-size: 15px;
+    transition: transform 0.3s var(--ease-out);
+}
+.cta-email:hover .cta-email-arrow { transform: translate(2px, -2px); }
+body.dark-mode .cta-email:hover {
+    color: #0a0a0a;
+    box-shadow: 0 14px 34px -10px rgba(57, 255, 20, 0.45);
+}
 
 /* ============================================
    滚动揭示动画
@@ -2241,11 +2267,8 @@ body.dark-mode .cta-title .accent {
     color: #0a0a0a;
 }
 body.dark-mode .cta-email {
-    border-bottom-color: var(--text-primary);
-}
-body.dark-mode .cta-email:hover {
-    color: var(--accent);
-    border-color: var(--accent);
+    border-color: rgba(255, 255, 255, 0.45);
+    color: var(--text-primary);
 }
 
 /* ============================================
@@ -2670,65 +2693,122 @@ button.cta-email {
 .contact-modal-mask {
     position: absolute;
     inset: 0;
-    background: rgba(12, 14, 12, 0.38);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(14, 16, 12, 0.42);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 .contact-modal-card {
     position: relative;
-    width: min(420px, calc(100vw - 40px));
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 28px 28px 20px;
+    width: min(446px, calc(100vw - 40px));
+    background: linear-gradient(180deg, #ffffff 0%, #f5f5f0 100%);
+    border: 1px solid rgba(12, 12, 12, 0.08);
+    border-radius: 24px;
+    overflow: hidden;
     box-shadow:
-        0 40px 80px -24px rgba(0, 0, 0, 0.35),
-        inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    transform: translateY(18px) scale(0.96);
-    transition: transform 0.34s var(--ease-out);
+        0 48px 100px -28px rgba(15, 20, 12, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.38s var(--ease-out);
 }
 .contact-modal.is-open .contact-modal-card {
     transform: translateY(0) scale(1);
 }
-.contact-modal-title {
-    margin: 0 32px 8px 0;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
+/* 顶部荧光绿高光描线 */
+.contact-modal-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+        transparent 0%, var(--accent) 30%, var(--accent) 70%, transparent 100%);
+    opacity: 0.85;
+    z-index: 2;
 }
+
+/* 头部：小标 + 大标题拉开层级 */
+.contact-modal-head {
+    padding: 32px 30px 20px;
+}
+.contact-modal-kicker {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 40px 0 0;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--text-tertiary);
+}
+.contact-modal-kicker span::before {
+    content: '';
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+    vertical-align: 1px;
+    box-shadow: 0 0 0 4px var(--accent-dim);
+}
+.contact-modal-title {
+    margin: 12px 0 0;
+    font-family: var(--font-heading);
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--text-primary);
+}
+
 .contact-modal-close {
     position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 32px;
-    height: 32px;
+    top: 18px;
+    right: 18px;
+    z-index: 3;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
+    border: 1px solid transparent;
     border-radius: 50%;
     background: transparent;
-    font-size: 22px;
+    font-size: 21px;
     line-height: 1;
     color: var(--text-secondary);
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 .contact-modal-close:hover {
     background: var(--hover-bg);
+    border-color: var(--border);
     color: var(--text-primary);
+}
+
+/* 联系条目 */
+.contact-items {
+    margin: 0 22px;
+    border-top: 1px solid var(--border);
 }
 .contact-item {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 15px 0;
-    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    padding: 17px 8px;
 }
-.contact-item:last-of-type { border-bottom: none; }
+.contact-item + .contact-item {
+    border-top: 1px solid var(--border);
+}
 .contact-label {
-    flex: 0 0 52px;
-    font-size: 12px;
+    flex: 0 0 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.contact-label-en {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--text-tertiary);
+}
+.contact-label-cn {
+    font-size: 13px;
     color: var(--text-secondary);
 }
 .contact-value {
@@ -2736,47 +2816,68 @@ button.cta-email {
     -webkit-appearance: none;
     flex: 1 1 auto;
     min-width: 0;
-    margin-left: -8px;
-    padding: 7px 8px;
+    padding: 10px 12px;
+    margin-left: -12px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     background: transparent;
     font-family: var(--font-mono);
-    font-size: 17px;
+    font-size: 18.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
     text-align: left;
     color: var(--text-primary);
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.22s, color 0.22s;
 }
 .contact-value:hover {
-    background: var(--accent-dim);
-    color: var(--accent);
+    background: rgba(176, 224, 46, 0.16);
+    color: #5d7c10;
 }
 .contact-copied {
     flex: 0 0 auto;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(176, 224, 46, 0.18);
+    color: #5d7c10;
     font-size: 12px;
-    color: var(--accent);
+    font-weight: 600;
     opacity: 0;
-    transform: translateX(-4px);
-    transition: opacity 0.22s, transform 0.22s;
+    transform: translateX(-6px) scale(0.92);
+    transition: opacity 0.22s, transform 0.22s var(--ease-out);
     pointer-events: none;
 }
 .contact-item.is-copied .contact-copied {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
+}
+
+.contact-modal-foot {
+    padding: 14px 30px 26px;
 }
 .contact-hint {
-    margin: 14px 0 0;
-    font-size: 11px;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
     color: var(--text-tertiary);
 }
+
+/* 深色模式：深灰墨绿卡片底 + 荧光绿交互色 */
 body.dark-mode .contact-modal-card {
-    background: #161616;
-    border-color: rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, #1b1d18 0%, #111310 100%);
+    border-color: rgba(255, 255, 255, 0.1);
     box-shadow:
-        0 40px 90px -20px rgba(0, 0, 0, 0.8),
+        0 48px 110px -24px rgba(0, 0, 0, 0.85),
         inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
+body.dark-mode .contact-value:hover {
+    background: rgba(57, 255, 20, 0.12);
+    color: var(--accent);
+}
+body.dark-mode .contact-copied {
+    background: rgba(57, 255, 20, 0.14);
+    color: var(--accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .contact-modal,
     .contact-modal-card { transition: none; }
