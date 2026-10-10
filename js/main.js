@@ -1422,6 +1422,8 @@
         initLoader();
     }
 
+    /* ---------- 液态流体烟雾 — 已改用 CSS metaball ---------- */
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {

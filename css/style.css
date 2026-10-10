@@ -3,6 +3,18 @@
    黑 + 荧光绿 · 居中排版 · 1320px 安全区
    ============================================ */
 
+/* 卡片边框双光带角度变量 — 相向运动 */
+@property --card-angle-a {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+@property --card-angle-b {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
 :root {
     --bg-1: #f5f5f2;
     --bg-2: #fafaf8;
@@ -119,6 +131,61 @@ body::before {
     width: 100vw; height: 100vh;
     z-index: 9990;
     pointer-events: none;
+}
+
+/* 液态流体烟雾 metaball — hero 背景层 */
+.fluid-meta {
+    --size: 650px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--size);
+    height: var(--size);
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+.fluid-meta .ball {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--size) + var(--i));
+    height: calc(var(--size) + var(--i));
+    background-color: var(--color);
+    border-radius: 50%;
+    transform-origin: var(--size);
+    mix-blend-mode: hard-light;
+    filter: blur(58px);
+    animation: metaSpin var(--d) linear infinite;
+}
+.fluid-meta .ball:nth-child(even) {
+    animation-direction: reverse;
+}
+@keyframes metaSpin {
+    to { transform: rotate(359deg); }
+}
+/* 浅色模式隐藏 metaball */
+body:not(.dark-mode) .fluid-meta { display: none; }
+
+/* ---------- Moving blobs 液态 shader 背景 ---------- */
+.liquid-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.liquid-bg .liquid-bg-canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+/* WebGL 液态层就绪后，旧的 CSS metaball 让贤；
+   若 shader 初始化失败则不会加此 class，metaball 继续兜底 */
+body.liquid-bg-ready .fluid-meta { display: none; }
+/* 无 hover 设备（纯触控）也不拦截手势 */
+@media (hover: none) {
+    .liquid-bg { pointer-events: none; }
 }
 
 /* ---------- 加载动画 ---------- */
@@ -672,6 +739,10 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
     color: var(--text-secondary);
     margin-bottom: 18px;
 }
+/* 深色模式下正文比标签更亮，避免与 char-tag 同色 */
+body.dark-mode .char-card-desc {
+    color: #c8c8c8;
+}
 
 .char-card-tags {
     display: flex;
@@ -904,14 +975,14 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
     position: absolute;
     left: 50%;
     top: 50%;                       /* 舞台中央作为"发牌原点" */
-    width: 260px;                   /* 图三的竖版卡宽度 */
-    max-width: 44vw;
+    width: 286px;                   /* 竖版卡宽度（加宽，给长标题/副标题留足空间） */
+    max-width: 48vw;
     height: 400px;
     max-height: 72vh;
     display: flex;
     flex-direction: column;
     padding: 14px 14px 18px;
-    gap: 12px;
+    gap: 16px;
     align-items: stretch;
     justify-content: flex-start;
     border-radius: 20px;
@@ -930,7 +1001,7 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
     backface-visibility: hidden;
 }
 .fan-card::before {
-    /* 顶部渐变高光条（参考竞品金线） */
+    /* 顶部渐变高光条（参考竞品金线）— 浅色模式隐藏，深色改为科技感边框发光 */
     content: '';
     position: absolute;
     left: 12%; right: 12%;
@@ -945,6 +1016,12 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
     z-index: 2;
     border-radius: 1px;
 }
+/* 浅色模式不显示任何发光条 */
+body:not(.dark-mode) .fan-card::before { display: none; }
+body:not(.dark-mode) .fan-card .edge-top,
+body:not(.dark-mode) .fan-card .edge-bottom,
+body:not(.dark-mode) .fan-card .edge-left,
+body:not(.dark-mode) .fan-card .edge-right { display: none; }
 .fan-card::after {
     /* 卡片叠层深度感：阴影 + 极细描边 */
     content: '';
@@ -973,11 +1050,12 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .fan-card .project-thumb .thumb-fallback {
     position: absolute;
-    top: 12px;
-    left: 12px;
+    top: 8px;
+    left: 8px;
     right: auto;
     bottom: auto;
     display: flex;
@@ -999,8 +1077,8 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
 .fan-card .project-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding-top: 2px;
+    gap: 2px;
+    padding-top: 4px;
     padding-left: 2px;
     padding-right: 2px;
     min-width: 0;
@@ -1020,35 +1098,36 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
 .fan-card .project-title-block { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .fan-card .project-subtitle {
     font-size: 12px;
+    line-height: 1.45;
     color: #7a7a7a;
-    white-space: nowrap;
+    white-space: nowrap;            /* 强制单行，保证所有卡片高度一致 */
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .fan-card .project-meta {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
     padding-left: 2px;
     padding-right: 2px;
     flex-shrink: 0;
     min-width: 0;
-    margin-top: auto;
+    margin-top: 6px;
 }
 .fan-card .project-meta .meta-left {
     display: flex;
     align-items: center;
     gap: 8px;
     min-width: 0;
-    align-self: flex-start;
 }
 .fan-card .project-meta .meta-right {
     display: flex;
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
-    align-self: flex-end;
 }
 .fan-card .project-type {
     font-size: 12px;
@@ -1077,10 +1156,10 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
         inset 0 1px 0 rgba(255,255,255,0.9);
     transition-delay: 0s !important;
 }
-/* hover：内部图片和文字不动，仅卡片整体沿扇形半径往外移 15px */
+/* hover：卡片本体不上移（保持扇形弧线整齐），仅缩略图轻微放大 */
 .fan-card:hover .project-name,
-.fan-card:hover .project-arrow,
-.fan-card:hover .project-thumb { transform: none; }
+.fan-card:hover .project-arrow { transform: none; }
+.fan-card:hover .project-thumb img { transform: scale(1.05); }
 .fan-card:hover::before { opacity: 1; }
 
 /* ===== Stage 1：第一张（中央卡 fan-i=0）从屏幕底部升起 → 停在舞台中央，其他牌整齐叠在它身后 ===== */
@@ -1117,69 +1196,162 @@ html:has(body.admin-page) { height: auto !important; overflow: auto !important; 
     filter: brightness(calc(1 - var(--deck-idx-0) * 0.025));
 }
 
-/* ===== Stage 2：横向扇形展开（fan-i 已经是相对中心的值：-2,-1,0,1,2,...）
-   参考图三：中间竖直，两端倾斜（左卡逆时针，右卡顺时针），整体横向排开，形成下凸弧形。===== */
+/* ===== Stage 2：Coverflow 倾斜覆盖流 =====
+   定位（translate/rotate/scale/z-index）全部由 JS 按"距中心卡的距离"实时计算
+   并以内联样式写入；这里只负责落定后的弹性过渡与中心卡光影。 */
 .panel-projects.fan-mode.fan-stage-2 .fan-card {
     opacity: 1;
     transition:
-        transform 1.35s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.8s ease,
-        box-shadow 0.4s ease;
-    /* 中央先到位，两侧逐张弹开（按 fan-i 绝对值阶梯延迟） */
-    transition-delay: calc( abs(var(--fan-i)) * 85ms );
-
-    /* 关键算法（fan-i 已经是"相对中心偏移"，支持浮点：5 张为 [-2..2]，6 张为 [-2.5..2.5]）： */
-    /* 1) 旋转：每偏移一格 9° —— 中间 0°，两端随 fan-i 正负同步旋转 */
-    --fan-rot: calc(var(--fan-i) * 9deg);
-    /* 2) 横向平移：每格 180px（对称 6 张时：±2.5 × 180 = ±450px，竖版卡 260 × cos(rot) + 400 × sin(rot) 大约 350px，整体 450 + 175 = 625 半宽，可适配 1300px 左右的视口） */
-    --fan-shift-x: calc(var(--fan-i) * 180px);
-    /* 3) 垂直平移：中间卡在 -50%，两侧按二次曲线下沉，形成下凸弧线（扇形底弧） */
-    --fan-shift-y: calc(-50% + (var(--fan-i) * var(--fan-i)) * 9px + abs(var(--fan-i)) * 6px);
-    /* 4) 远端略小（透视感，最远不超过 10% 缩小） */
-    --fan-scale: calc(1 - min(abs(var(--fan-i)) * 0.03, 0.10));
-    transform:
-        translate(calc(-50% + var(--fan-shift-x)), var(--fan-shift-y))
-        rotate(var(--fan-rot))
-        scale(var(--fan-scale));
-    /* 远端压在底下，中央卡置顶（hover 会覆盖） */
-    z-index: calc(10 - abs(var(--fan-i)));
+        transform 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.12),
+        opacity 0.3s ease,
+        box-shadow 0.3s ease;
+    will-change: transform, opacity;
 }
-/* hover：沿扇形半径往外移 15px（translateY 在 rotate 之后 = 局部坐标系中沿半径方向外移） */
-.panel-projects.fan-mode.fan-stage-2 .fan-card:hover {
-    transform:
-        translate(calc(-50% + var(--fan-shift-x)), var(--fan-shift-y))
-        rotate(var(--fan-rot))
-        scale(var(--fan-scale))
-        translateY(-15px);
-    z-index: 10;
-    transition-delay: 0s !important;
+/* 中心卡：更强的投影，视觉聚焦（hover 上浮由 JS 写 translateY） */
+.panel-projects.fan-mode.fan-stage-2 .fan-card[data-active="1"] {
+    box-shadow:
+        0 36px 80px -22px rgba(18, 28, 45, 0.28),
+        0 10px 24px -8px rgba(18, 28, 45, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
-/* 暗色模式下 fan-card 的光影 */
+body.dark-mode .panel-projects.fan-mode.fan-stage-2 .fan-card[data-active="1"] {
+    box-shadow:
+        0 36px 80px -22px rgba(0, 0, 0, 0.6),
+        0 10px 28px -8px rgba(57, 255, 20, 0.18),
+        0 0 0 1px rgba(57, 255, 20, 0.12) inset;
+}
+/* 暗色模式下 fan-card — 科技感发光边框（不覆盖内容） */
 body.dark-mode .fan-card {
-    background: #171717;
-    border-color: rgba(255,255,255,0.06);
+    background: #141414;
+    border-color: rgba(57, 255, 20, 0.15);
     box-shadow:
         0 24px 48px -18px rgba(0, 0, 0, 0.35),
         0 6px 16px -6px rgba(0, 0, 0, 0.22),
-        0 0 0 1px rgba(255,255,255,0.025) inset,
-        0 1px 0 rgba(255,255,255,0.06) inset;
+        0 0 0 1px rgba(57, 255, 20, 0.08) inset;
 }
-body.dark-mode .fan-card::before {
-    background: linear-gradient(90deg,
-        transparent 0%,
-        rgba(57, 255, 20, 0.45) 50%,
-        transparent 100%);
-    opacity: 0.55;
+/* 双光带相向运动 — 从左上角出发, 右下角相遇, 回到左上角
+   光带A: 顺时针 (左上→顶→右→右下→底→左→左上)
+   光带B: 逆时针 (左上→左→底→右下→右→顶→左上) */
+body.dark-mode .fan-card .border-light-a,
+body.dark-mode .fan-card .border-light-b {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 3;
+    will-change: background;
 }
+/* 光带A — 顺时针, 头在前(顺时针), 拖尾在后(逆时针) */
+body.dark-mode .fan-card .border-light-a {
+    background: conic-gradient(
+        from calc(var(--card-angle-a) - 45deg),
+        /* 头部峰值 */
+        rgba(57, 255, 20, 1.00)   0deg,
+        rgba(57, 255, 20, 1.00)  5deg,
+        /* 前端(顺时针方向, 短 45°) */
+        rgba(57, 255, 20, 0.50)  12deg,
+        rgba(57, 255, 20, 0.20)  20deg,
+        rgba(57, 255, 20, 0.06)  30deg,
+        rgba(57, 255, 20, 0.00)  45deg,
+        /* 透明区 */
+        rgba(57, 255, 20, 0.00) 260deg,
+        /* 拖尾(逆时针方向, 长 100°) */
+        rgba(57, 255, 20, 0.02) 260deg,
+        rgba(57, 255, 20, 0.06) 280deg,
+        rgba(57, 255, 20, 0.12) 300deg,
+        rgba(57, 255, 20, 0.25) 320deg,
+        rgba(57, 255, 20, 0.50) 340deg,
+        rgba(57, 255, 20, 0.80) 352deg,
+        rgba(57, 255, 20, 1.00) 360deg
+    );
+    animation: cardSpinA 8s linear infinite;
+}
+/* 光带B — 逆时针, 头在前(逆时针), 拖尾在后(顺时针) — 镜像结构 */
+body.dark-mode .fan-card .border-light-b {
+    background: conic-gradient(
+        from calc(-1 * var(--card-angle-b) - 45deg),
+        /* 头部峰值 */
+        rgba(57, 255, 20, 1.00)   0deg,
+        rgba(57, 255, 20, 1.00)  5deg,
+        /* 拖尾(顺时针方向, 长 100°) — 逆时针运动的后方 */
+        rgba(57, 255, 20, 0.80)  12deg,
+        rgba(57, 255, 20, 0.50)  20deg,
+        rgba(57, 255, 20, 0.25)  40deg,
+        rgba(57, 255, 20, 0.12)  60deg,
+        rgba(57, 255, 20, 0.06)  80deg,
+        rgba(57, 255, 20, 0.02) 100deg,
+        rgba(57, 255, 20, 0.00) 110deg,
+        /* 透明区 */
+        rgba(57, 255, 20, 0.00) 310deg,
+        /* 前端(逆时针方向, 短 50°) — 逆时针运动的前方 */
+        rgba(57, 255, 20, 0.02) 310deg,
+        rgba(57, 255, 20, 0.06) 320deg,
+        rgba(57, 255, 20, 0.20) 340deg,
+        rgba(57, 255, 20, 0.50) 350deg,
+        rgba(57, 255, 20, 0.80) 355deg,
+        rgba(57, 255, 20, 1.00) 360deg
+    );
+    animation: cardSpinB 8s linear infinite;
+}
+@keyframes cardSpinA {
+    to { --card-angle-a: 360deg; }
+}
+@keyframes cardSpinB {
+    to { --card-angle-b: 360deg; }
+}
+body.dark-mode .fan-card:hover .border-light-a,
+body.dark-mode .fan-card:hover .border-light-b {
+    animation-duration: 2s;
+}
+/* 深色 hover — 外发光 */
 body.dark-mode .fan-card:hover {
-    border-color: rgba(57, 255, 20, 0.35);
     box-shadow:
         0 30px 56px -22px rgba(0,0,0,0.5),
         0 0 0 1px rgba(57, 255, 20, 0.18),
-        0 0 24px -10px rgba(57, 255, 20, 0.22),
+        0 0 32px -6px rgba(57, 255, 20, 0.35),
         0 1px 0 rgba(255,255,255,0.06) inset;
 }
-body.dark-mode .fan-card:hover::before { opacity: 1; }
+
+/* @property 不支持的浏览器 — 静态渐变边框降级 */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+    body.dark-mode .fan-card .border-light-a,
+    body.dark-mode .fan-card .border-light-b {
+        background: linear-gradient(135deg, rgba(57,255,20,0.4), rgba(57,255,20,0.1), rgba(57,255,20,0.4)) !important;
+        animation: none !important;
+    }
+}
+
+/* Reduced motion — 静态边框 */
+@media (prefers-reduced-motion: reduce) {
+    body.dark-mode .fan-card .border-light-a,
+    body.dark-mode .fan-card .border-light-b {
+        animation: none !important;
+    }
+}
+
+/* 浅色模式隐藏双光带 */
+body:not(.dark-mode) .fan-card .border-light-a,
+body:not(.dark-mode) .fan-card .border-light-b {
+    display: none;
+}
+
+/* ::before 旧规则清理 — 深色模式不再用 */
+body.dark-mode .fan-card::before { display: none; }
+
+/* edge-* 旧元素已替换为 border-light-a/b */
+body.dark-mode .fan-card .edge-top,
+body.dark-mode .fan-card .edge-bottom,
+body.dark-mode .fan-card .edge-left,
+body.dark-mode .fan-card .edge-right {
+    display: none !important;
+}
 
 /* 舞台中央的第一张卡升起 + 发牌后整体轻微呼吸感（避免单调） */
 @keyframes fanSoftBreath {
@@ -1189,6 +1361,61 @@ body.dark-mode .fan-card:hover::before { opacity: 1; }
 .panel-projects.fan-mode.fan-stage-2 .fan-stage {
     animation: fanSoftBreath 6s ease-in-out infinite;
 }
+
+/* ===== Coverflow 控件：左右圆形箭头 + 查看全部（移动） ===== */
+.fan-stage {
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;             /* 纵向交给页面滚动，横向由 JS 拖拽 */
+    cursor: grab;
+}
+.fan-stage:active { cursor: grabbing; }
+.fan-stage .fan-card { cursor: pointer; }
+
+.fan-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: -4px auto 8px;
+}
+.fan-nav { display: flex; gap: 14px; }
+.fan-arrow {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--border, rgba(0,0,0,0.14));
+    background: rgba(255, 255, 255, 0.78);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: var(--text-primary, #111);
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s var(--ease-out, ease),
+                box-shadow 0.25s ease, opacity 0.25s ease,
+                background 0.25s ease, border-color 0.25s ease;
+}
+.fan-arrow:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -10px rgba(18, 28, 45, 0.28);
+}
+.fan-arrow:active:not(:disabled) { transform: scale(0.92); }
+.fan-arrow:disabled { opacity: 0.28; cursor: default; }
+body.dark-mode .fan-arrow {
+    background: rgba(20, 24, 20, 0.72);
+    border-color: rgba(57, 255, 20, 0.22);
+    color: #c9ffc0;
+}
+body.dark-mode .fan-arrow:hover:not(:disabled) {
+    box-shadow: 0 10px 28px -10px rgba(57, 255, 20, 0.25);
+}
+/* 桌面端不显示"查看全部作品"（舞台即是全部入口），移动端在 responsive.css 打开 */
+.mobile-view-more { display: none; }
 
 .project-list.has-many .project-name {
     font-size: 18px;
@@ -1450,7 +1677,10 @@ body.dark-mode .fan-card:hover::before { opacity: 1; }
     flex-shrink: 0;
     filter: drop-shadow(0 0 6px rgba(57, 255, 20, 0.3));
 }
-
+/* 深色 logo 默认隐藏，深色模式时显示并隐藏浅色版 */
+.nav-logo-icon-dark { display: none; }
+body.dark-mode .nav-logo-icon:not(.nav-logo-icon-dark) { display: none; }
+body.dark-mode .nav-logo-icon-dark { display: inline-block; }
 body.dark-mode .nav-logo-icon {
     filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.5));
 }
@@ -2042,22 +2272,8 @@ body.dark-mode .panel-hero::before {
     z-index: 1;
 }
 body.dark-mode .panel-hero::after {
-    content: '';
-    position: absolute;
-    width: 400px;
-    height: 400px;
-    top: -100px;
-    right: -80px;
-    background: conic-gradient(from 0deg,
-        transparent 0deg,
-        rgba(57,255,20,0.06) 45deg,
-        rgba(57,255,20,0.12) 90deg,
-        rgba(57,255,20,0.06) 135deg,
-        transparent 180deg,
-        transparent 360deg);
-    animation: heroSpin 12s linear infinite;
-    pointer-events: none;
-    z-index: 0;
+    /* 旧扫光动效已移除, 改用 fluid-canvas */
+    display: none;
 }
 @keyframes heroFloat {
     0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
@@ -2405,7 +2621,7 @@ body.dark-mode .bottombar-inner {
         background: rgba(10, 10, 10, 0.55);
         backdrop-filter: blur(20px) saturate(1.2);
         -webkit-backdrop-filter: blur(20px) saturate(1.2);
-        border-color: rgba(255, 255, 255, 0.06);
+        border-color: rgba(57, 255, 20, 0.18);
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
     }
     body.dark-mode .mobile-nav-link {

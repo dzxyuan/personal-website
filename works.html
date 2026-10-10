@@ -44,9 +44,9 @@
             color: var(--text-primary);
         }
 
-        /* Nav — sticky 固定在顶部，不随滚动消失 */
+        /* Nav — fixed 固定在顶部，不随滚动消失（sticky 在部分移动端 body 滚动场景失效） */
         .works-nav {
-            position: sticky; top: 0; z-index: 9000;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 9000;
             display: flex; align-items: center; justify-content: space-between;
             padding: 18px 32px;
             min-height: 79px;
@@ -98,8 +98,8 @@
         body.dark-mode .theme-icon-sun { display: block; }
         body.dark-mode .theme-icon-moon { display: none; }
 
-        /* Hero */
-        .works-hero { padding: 48px 24px 20px; text-align: center; }
+        /* Hero — padding-top 补偿 fixed nav 高度 */
+        .works-hero { padding: calc(79px + 24px) 24px 20px; text-align: center; }
         .works-hero h1 {
             font-family: var(--font-heading);
             font-size: clamp(26px, 5vw, 44px);
@@ -267,7 +267,7 @@
             .works-nav .nav-back { font-size: 12px; }
             .works-nav .theme-toggle { width: 30px; height: 30px; }
             .works-nav .theme-toggle svg { width: 14px; height: 14px; }
-            .works-hero { padding: 36px 16px 14px; }
+            .works-hero { padding: calc(51px + 20px) 16px 14px; }
             .works-hero h1 { font-size: clamp(22px, 5vw, 32px); margin-bottom: 6px; }
             .works-hero .sub { font-size: 12px; }
             .works-grid {
@@ -312,10 +312,10 @@
         }
     </style>
 </head>
-<body class="detail-page">
+<body class="detail-page works-page">
     <nav class="works-nav">
         <a href="index.html" class="nav-logo">
-            <img src="jtlogo.svg" alt="Logo" class="nav-logo-icon" onerror="this.style.display='none'">
+            <img src="jtlogo.svg" alt="Logo" class="nav-logo-icon" onerror="this.style.display='none'"><img src="jtlogo-dark.svg" alt="Logo" class="nav-logo-icon nav-logo-icon-dark" onerror="this.style.display='none'">
             加糖<span class="dot">·</span>
         </a>
         <div class="nav-actions">

@@ -494,8 +494,8 @@
         padding: 0 4vw;
     }
     .fan-card {
-        width: 230px;
-        height: 370px;
+        width: 252px;
+        height: 372px;
         padding: 12px 12px 16px;
     }
     .fan-card .project-thumb { min-height: 190px; }
@@ -511,12 +511,12 @@
 @media (max-width: 960px) {
     .fan-stage { height: 480px; padding: 0 2vw; }
     .fan-card {
-        width: 200px;
+        width: 224px;
         height: 336px;
-        max-width: 48vw;
+        max-width: 52vw;
         padding: 10px 10px 14px;
     }
-    .fan-card .project-thumb { min-height: 158px; }
+    .fan-card .project-thumb { min-height: 152px; }
     .fan-card .project-name { font-size: 14px; }
     .fan-card .project-subtitle { font-size: 11px; }
     .panel-projects.fan-mode.fan-stage-2 .fan-card {
@@ -553,56 +553,37 @@
         text-align: center !important;
     }
 
-    /* Stage：2列网格，卡片宽度撑满，上下左右间距一致 */
+    /* Stage：Coverflow 横滑视口（JS 绝对定位每张卡） */
     .panel-projects .projects-inner .fan-stage,
     .fan-stage {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
-        grid-template-rows: auto auto auto !important;
-        column-gap: 10px !important;
-        row-gap: 10px !important;
-        gap: 10px !important;
-        justify-content: center !important;
-        align-content: start !important;
-        height: auto !important;
+        display: block !important;
+        position: relative !important;
+        height: 404px !important;
         min-height: 0 !important;
         max-height: none !important;
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 auto !important;
         padding: 0 !important;
-        overflow: visible !important;
-        perspective: none !important;
+        overflow: hidden !important;
+        perspective: 1400px !important;
         flex: 0 0 auto !important;
     }
 
-    /* Card：宽度撑满，固定高度185px，适配移动端字号规范 */
+    /* Card：竖版中卡，JS 用内联 transform 摆放，!important 只负责尺寸/外观 */
     .panel-projects .fan-card,
     .fan-card {
-        position: relative !important;
-        left: auto !important;
-        top: auto !important;
-        right: auto !important;
-        bottom: auto !important;
-        width: 100% !important;
-        max-width: none !important;
-        height: 185px !important;
+        left: 50% !important;
+        top: 50% !important;
+        width: 66vw !important;
+        max-width: 252px !important;
+        height: 336px !important;
         min-height: 0 !important;
         max-height: none !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        transform: none !important;
-        transition: none !important;
-        transition-delay: 0s !important;
-        transform-origin: center center !important;
-        z-index: auto !important;
         margin: 0 !important;
         padding: 10px !important;
-        border-radius: 12px !important;
-        gap: 0 !important;
-        will-change: auto !important;
-        backface-visibility: visible !important;
-        filter: none !important;
+        border-radius: 14px !important;
+        gap: 10px !important;
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
@@ -616,50 +597,83 @@
         --fan-scale: initial !important;
     }
 
-    /* 强化卡片顶部荧光绿发光条 — 突出视觉层级 */
-    .fan-card::before {
+    /* 深色模式双光带（移动端同步） */
+    body:not(.dark-mode) .fan-card .border-light-a,
+    body:not(.dark-mode) .fan-card .border-light-b { display: none !important; }
+    body.dark-mode .fan-card .border-light-a,
+    body.dark-mode .fan-card .border-light-b {
         content: '' !important;
         position: absolute !important;
-        left: 8% !important; right: 8% !important;
-        top: 0 !important;
-        height: 2px !important;
-        background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(57, 255, 20, 0.4) 15%,
-            rgba(57, 255, 20, 0.95) 50%,
-            rgba(57, 255, 20, 0.4) 85%,
-            transparent 100%) !important;
-        box-shadow:
-            0 0 8px rgba(57, 255, 20, 0.6),
-            0 0 16px rgba(57, 255, 20, 0.3) !important;
-        opacity: 1 !important;
+        inset: 0 !important;
+        border-radius: inherit !important;
+        padding: 1px !important;
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) !important;
+        -webkit-mask-composite: xor !important;
+                mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) !important;
+                mask-composite: exclude !important;
+        box-sizing: border-box !important;
         pointer-events: none !important;
         z-index: 3 !important;
-        border-radius: 2px !important;
     }
-    body.dark-mode .fan-card::before {
-        background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(57, 255, 20, 0.5) 15%,
-            rgba(57, 255, 20, 1) 50%,
-            rgba(57, 255, 20, 0.5) 85%,
-            transparent 100%) !important;
-        box-shadow:
-            0 0 12px rgba(57, 255, 20, 0.8),
-            0 0 24px rgba(57, 255, 20, 0.4) !important;
+    body.dark-mode .fan-card .border-light-a {
+        background: conic-gradient(
+            from calc(var(--card-angle-a) - 45deg),
+            rgba(57,255,20,1.00) 0deg,
+            rgba(57,255,20,1.00) 5deg,
+            rgba(57,255,20,0.50) 12deg,
+            rgba(57,255,20,0.20) 20deg,
+            rgba(57,255,20,0.06) 30deg,
+            rgba(57,255,20,0.00) 45deg,
+            rgba(57,255,20,0.00) 260deg,
+            rgba(57,255,20,0.02) 260deg,
+            rgba(57,255,20,0.06) 280deg,
+            rgba(57,255,20,0.12) 300deg,
+            rgba(57,255,20,0.25) 320deg,
+            rgba(57,255,20,0.50) 340deg,
+            rgba(57,255,20,0.80) 352deg,
+            rgba(57,255,20,1.00) 360deg
+        ) !important;
+        animation: cardSpinA 8s linear infinite !important;
     }
+    body.dark-mode .fan-card .border-light-b {
+        background: conic-gradient(
+            from calc(-1 * var(--card-angle-b) - 45deg),
+            rgba(57,255,20,1.00) 0deg,
+            rgba(57,255,20,1.00) 5deg,
+            rgba(57,255,20,0.80) 12deg,
+            rgba(57,255,20,0.50) 20deg,
+            rgba(57,255,20,0.25) 40deg,
+            rgba(57,255,20,0.12) 60deg,
+            rgba(57,255,20,0.06) 80deg,
+            rgba(57,255,20,0.02) 100deg,
+            rgba(57,255,20,0.00) 110deg,
+            rgba(57,255,20,0.00) 310deg,
+            rgba(57,255,20,0.02) 310deg,
+            rgba(57,255,20,0.06) 320deg,
+            rgba(57,255,20,0.20) 340deg,
+            rgba(57,255,20,0.50) 350deg,
+            rgba(57,255,20,0.80) 355deg,
+            rgba(57,255,20,1.00) 360deg
+        ) !important;
+        animation: cardSpinB 8s linear infinite !important;
+    }
+    /* 旧 edge-* 隐藏 */
+    body.dark-mode .fan-card .edge-top,
+    body.dark-mode .fan-card .edge-bottom,
+    body.dark-mode .fan-card .edge-left,
+    body.dark-mode .fan-card .edge-right { display: none !important; }
+    body.dark-mode .fan-card::before { display: none !important; }
 
     .fan-card .project-thumb {
         width: 100% !important;
         height: auto !important;
-        min-height: 0 !important;
+        min-height: 200px !important;
         max-height: none !important;
-        flex: 0 0 auto !important;
-        aspect-ratio: 16/10 !important;
+        flex: 1 1 auto !important;
         position: relative !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         overflow: hidden !important;
-        margin-bottom: 4px !important;
+        margin-bottom: 0 !important;
     }
     .fan-card .project-thumb img {
         position: absolute !important;
@@ -680,6 +694,8 @@
         min-width: 0 !important;
         display: flex !important;
         flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
     }
     .fan-card .project-name {
         font-size: 13px !important;
@@ -708,6 +724,7 @@
         gap: 4px !important;
         margin-top: 4px !important;
         padding-top: 4px !important;
+        width: 100% !important;
         min-width: auto !important;
         justify-content: space-between !important;
         align-items: center !important;
@@ -733,33 +750,23 @@
     .fan-card .project-year { font-size: 12px !important; }
     .fan-card .project-arrow { font-size: 12px !important; }
 
-    /* 覆盖 JS 内联样式 */
-    .fan-card[style*="left"],
-    .fan-card[style*="top"] { left: auto !important; top: auto !important; }
-    .fan-card[style*="transform"] { transform: none !important; }
-
-    /* 只显示前4张卡片（2行×2列），隐藏第5张起 */
-    .fan-card:nth-child(n+5) { display: none !important; }
-
-    /* 查看更多按钮 — 独立行居中，移动端规范尺寸 */
+    /* 查看全部按钮 — 舞台下方独立行居中（桌面端由 style.css 隐藏） */
+    .fan-footer { margin-top: 2px !important; }
     .mobile-view-more {
-        grid-column: 1 / -1;
-        grid-row: 3;
-        justify-self: center;
         width: fit-content !important;
         min-width: 160px;
         display: flex !important;
         align-items: center;
         justify-content: center;
         gap: 6px;
-        padding: 10px 20px !important;
-        margin: 6px auto 0 !important;
+        padding: 8px 20px !important;
+        margin: 2px auto 0 !important;
         border-radius: 10px;
         border: none;
         background: transparent;
         color: var(--accent, #39FF14);
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 400;
         text-decoration: none;
         transition: all 0.25s ease;
         cursor: pointer;
@@ -785,15 +792,15 @@
     body:not(.dark-mode) .mobile-view-more:active {
         opacity: 0.8;
     }
-    /* 深色模式：按钮比卡片更含蓄，不抢视觉焦点 */
+    /* 深色模式：按钮文字与箭头用荧光绿强调 */
     body.dark-mode .mobile-view-more {
         border: none;
         background: transparent;
-        color: var(--text-secondary, #a0a0a0);
-        opacity: 0.5;
+        color: var(--accent, #39FF14);
+        opacity: 0.9;
     }
     body.dark-mode .mobile-view-more:active {
-        opacity: 0.8;
+        opacity: 1;
     }
 }
 
@@ -804,17 +811,19 @@
     }
     .panel-projects .projects-inner .fan-stage,
     .fan-stage {
-        gap: 10px !important;
+        height: 384px !important;
         padding: 0 !important;
     }
     .fan-card {
-        width: 100% !important;
-        max-width: none !important;
+        width: 70vw !important;
+        max-width: 258px !important;
+        height: 320px !important;
         padding: 10px !important;
         border-radius: 12px !important;
     }
     .fan-card .project-thumb {
-        margin-bottom: 4px !important;
+        min-height: 188px !important;
+        margin-bottom: 0 !important;
     }
     .fan-card .project-info {
         gap: 2px !important;
@@ -857,6 +866,9 @@
         position: static !important;
         left: auto !important;
         top: auto !important;
+        width: 240px !important;
+        max-width: 70vw !important;
+        height: 360px !important;
     }
     .fan-stage {
         display: flex !important;
@@ -864,13 +876,17 @@
         gap: 14px;
         justify-content: center;
         height: auto !important;
+        overflow: visible !important;
     }
+    /* 静态排布下切换箭头无意义，隐藏 */
+    .fan-nav { display: none !important; }
 }
 
 /* ============================================
    项目详情页 (project.html) — 黑色沉浸式主题
    ============================================ */
-body.detail-page {
+/* detail-page 深色强制仅用于 project.html 详情页；works.html 用 .works-page 跳过 */
+body.detail-page:not(.works-page) {
     cursor: auto;
     /* 深色主题覆盖变量 */
     --bg-1: #0a0a0a;
@@ -888,8 +904,16 @@ body.detail-page {
     min-height: 100vh;
     color: var(--text-primary);
 }
-body.detail-page::before {
+body.detail-page:not(.works-page)::before {
     background: linear-gradient(180deg, #0a0a0a 0%, #0c0c0c 40%, #141414 100%);
+}
+/* works-page 保留滚动行为，但不强制深色变量 */
+body.detail-page.works-page {
+    cursor: auto;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 100vh;
 }
 body.detail-page html,
 body.detail-page html body {
